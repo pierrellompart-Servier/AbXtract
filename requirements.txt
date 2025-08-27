@@ -1,0 +1,30 @@
+# Core dependencies
+numpy>=1.20.0
+pandas>=1.3.0
+scipy>=1.7.0
+matplotlib>=3.5.0
+
+# Bio packages
+biopython>=1.79
+peptides>=0.3.0
+protpy>=1.0.0
+prody>=2.0.0
+
+# Structure analysis
+freesasa>=2.1.0
+gemmi>=0.5.0
+
+# Antibody numbering
+anarci>=1.3
+
+# CLI and utilities
+click>=8.0.0
+tqdm>=4.62.0
+
+# File formats
+openpyxl>=3.0.0
+pyarrow>=6.0.0
+
+# Optional but recommended
+joblib>=1.1.0
+scikit-learn>=1.0.0

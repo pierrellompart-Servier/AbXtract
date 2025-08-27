@@ -1,0 +1,137 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "antibody-descriptors"
+dynamic = ["version"]
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+description = "Comprehensive toolkit for antibody and nanobody descriptor calculations"
+readme = "README.md"
+license = {text = "MIT"}
+keywords = [
+    "antibody",
+    "nanobody",
+    "descriptors",
+    "developability",
+    "bioinformatics",
+    "protein-analysis",
+    "structural-biology",
+    "therapeutics"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+requires-python = ">=3.8"
+
+dependencies = [
+    "numpy>=1.20.0",
+    "pandas>=1.3.0",
+    "scipy>=1.7.0",
+    "biopython>=1.79",
+    "click>=8.0.0",
+    "peptides>=0.3.0",
+    "prody>=2.0.0",
+    "freesasa>=2.1.0",
+    "anarci>=1.3",
+    "gemmi>=0.5.0",
+    "protpy>=1.0.0",
+    "tqdm>=4.62.0",
+    "openpyxl>=3.0.0",
+    "pyarrow>=6.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/antibody-descriptors"
+Documentation = "https://antibody-descriptors.readthedocs.io"
+Repository = "https://github.com/yourusername/antibody-descriptors"
+"Bug Tracker" = "https://github.com/yourusername/antibody-descriptors/issues"
+Changelog = "https://github.com/yourusername/antibody-descriptors/blob/main/CHANGELOG.md"
+
+[project.scripts]
+antibody-descriptors = "antibody_descriptors.cli:cli"
+ab-desc = "antibody_descriptors.cli:cli"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=3.0.0",
+    "black>=22.0.0",
+    "flake8>=4.0.0",
+    "mypy>=0.950",
+    "isort>=5.10.0",
+    "pre-commit>=2.17.0",
+]
+docs = [
+    "sphinx>=4.5.0",
+    "sphinx-rtd-theme>=1.0.0",
+]
+viz = [
+    "matplotlib>=3.5.0",
+    "seaborn>=0.11.0",
+    "plotly>=5.6.0",
+]
+
+[tool.setuptools]
+packages = ["antibody_descriptors"]
+
+[tool.setuptools.dynamic]
+version = {attr = "antibody_descriptors.__version__.__version__"}
+
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--cov=antibody_descriptors",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+]
+
+[tool.coverage.run]
+source = ["antibody_descriptors"]
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+    "*/setup.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]

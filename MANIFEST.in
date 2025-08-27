@@ -1,0 +1,40 @@
+# Include documentation
+include README.md
+include LICENSE
+include CHANGELOG.md
+include CONTRIBUTING.md
+
+# Include package data
+recursive-include antibody_descriptors/data *.csv *.json
+recursive-include antibody_descriptors/data/tripeptides *.pdb
+recursive-include antibody_descriptors/data/config *.json
+
+# Include requirements
+include requirements.txt
+include requirements-dev.txt
+include environment.yml
+
+# Include examples
+recursive-include examples *.py *.ipynb *.md
+recursive-exclude examples *.pyc __pycache__
+
+# Include tests
+recursive-include tests *.py *.pdb *.fasta
+recursive-exclude tests *.pyc __pycache__ .pytest_cache
+
+# Include docs
+recursive-include docs *.rst *.md *.txt
+recursive-exclude docs _build
+
+# Exclude unnecessary files
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude *.swp
+global-exclude .DS_Store
+global-exclude __pycache__
+global-exclude .git
+global-exclude .gitignore
+global-exclude .pytest_cache
+global-exclude .coverage
+global-exclude htmlcov
+global-exclude .mypy_cache

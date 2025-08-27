@@ -1,0 +1,44 @@
+name: antibody-descriptors
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  # Python version
+  - python=3.9
+  
+  # Core scientific packages
+  - numpy
+  - pandas
+  - scipy
+  - matplotlib
+  - seaborn
+  - jupyter
+  
+  # Bio packages available in conda
+  - biopython
+  
+  # External tools
+  - dssp
+  - muscle
+  
+  # Development tools
+  - pip
+  - ipykernel
+  - black
+  - pytest
+  - pytest-cov
+  
+  # Install remaining packages via pip
+  - pip:
+    - peptides>=0.3.0
+    - protpy>=1.0.0
+    - prody>=2.0.0
+    - freesasa>=2.1.0
+    - anarci>=1.3
+    - gemmi>=0.5.0
+    - click>=8.0.0
+    - tqdm>=4.62.0
+    - openpyxl>=3.0.0
+    - pyarrow>=6.0.0
+    - propka>=3.4.0

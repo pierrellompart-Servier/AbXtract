@@ -1,0 +1,53 @@
+.PHONY: help clean test install dev-install format lint docs
+
+help:
+	@echo "Available commands:"
+	@echo "  install      Install package in production mode"
+	@echo "  dev-install  Install package in development mode"
+	@echo "  test         Run tests"
+	@echo "  format       Format code with black and isort"
+	@echo "  lint         Run linters"
+	@echo "  docs         Build documentation"
+	@echo "  clean        Clean build artifacts"
+	@echo "  dist         Build distribution packages"
+
+install:
+	pip install .
+
+dev-install:
+	pip install -e .[dev,docs,viz]
+	pre-commit install
+
+test:
+	pytest tests/ -v --cov=antibody_descriptors --cov-report=html
+
+format:
+	black antibody_descriptors tests
+	isort antibody_descriptors tests
+
+lint:
+	flake8 antibody_descriptors tests
+	mypy antibody_descriptors
+	pylint antibody_descriptors
+
+docs:
+	cd docs && make clean && make html
+
+clean:
+	rm -rf build dist *.egg-info
+	rm -rf htmlcov .coverage .pytest_cache
+	rm -rf .mypy_cache
+	find . -type d -name __pycache__ -exec rm -rf {} +
+	find . -type f -name "*.pyc" -delete
+	find . -type f -name "*.pyo" -delete
+	find . -type f -name "*~" -delete
+
+dist: clean
+	python -m build
+	twine check dist/*
+
+upload-test: dist
+	twine upload --repository testpypi dist/*
+
+upload: dist
+	twine upload dist/*
