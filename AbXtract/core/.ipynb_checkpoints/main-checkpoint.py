@@ -121,13 +121,20 @@ class AntibodyDescriptorCalculator:
     
     def _initialize_calculators(self):
         """Initialize all calculator objects."""
+        
+        # Sequence-based calculators
+        # self.liability_analyzer = SequenceLiabilityAnalyzer(
+        #     scheme=self.config.numbering_scheme,
+        #     liability_definitions_path=self.config.liability_definitions_path,
+        #     restrict_species=self.config.restrict_species
+        # )
+        
         # Sequence-based calculators
         self.liability_analyzer = SequenceLiabilityAnalyzer(
             scheme=self.config.numbering_scheme,
-            liability_definitions_path=self.config.liability_definitions_path,
+            liability_file=self.config.liability_definitions_path,  # Changed from liability_definitions_path
             restrict_species=self.config.restrict_species
         )
-        
         self.bashour_calculator = BashourDescriptorCalculator()
         
         self.peptide_calculator = PeptideDescriptorCalculator(
@@ -376,15 +383,35 @@ class AntibodyDescriptorCalculator:
         results['N_Chains'] = len(sequences)
         
         # Calculate SASA and SAP
+        # if self.config.calculate_sasa:
+        #     logger.info("  Calculating SASA and SAP...")
+        #     try:
+        #         sasa_results = self.sasa_calculator.calculate(pdb_file)
+        #         results.update(sasa_results)
+        #     except Exception as e:
+        #         logger.error(f"  Error in SASA analysis: {e}")
+        #         if self.config.verbose:
+        #             raise
+
+        # Calculate SASA and SAP
         if self.config.calculate_sasa:
             logger.info("  Calculating SASA and SAP...")
             try:
                 sasa_results = self.sasa_calculator.calculate(pdb_file)
                 results.update(sasa_results)
+
+                # Also calculate SAP score
+                from ..structure.sasa import SAPCalculator
+                sap_calculator = SAPCalculator(self.sasa_calculator)
+                sap_results = sap_calculator.calculate(pdb_file)
+                results.update(sap_results)
+
             except Exception as e:
-                logger.error(f"  Error in SASA analysis: {e}")
+                logger.error(f"  Error in SASA/SAP analysis: {e}")
                 if self.config.verbose:
                     raise
+
+        
         
         # Calculate charge properties
         if self.config.calculate_charge:
@@ -788,3 +815,75 @@ class AntibodyDescriptorCalculator:
             flat['VdW_Contacts'] = arpeggio_results.get('vdw', 0)
             flat['Mean_Interaction_Distance'] = arpeggio_results.get('mean_distance', None)
         return flat
+    
+def _calculate_combined_metrics(self) -> Dict[str, float]:
+    """Calculate metrics that require both sequence and structure."""
+    combined = {}
+    
+    seq_results = self.results.get('sequence', {})
+    struct_results = self.results.get('structure', {})
+    
+    # Calculate Developability Index if both SAP and charge available
+    if 'sap_score' in struct_results and 'Folded_charge_pH7' in struct_results:
+        combined['DI_score'] = self._calculate_developability_index(
+            struct_results['sap_score'],
+            struct_results['Folded_charge_pH7']
+        )
+    
+    # Add other combined metrics
+    if 'Heavy_Length' in seq_results and 'total_sasa' in struct_results:
+        # SASA per residue
+        total_length = seq_results.get('Heavy_Length', 0) + seq_results.get('Light_Length', 0)
+        if total_length > 0:
+            combined['SASA_per_residue'] = struct_results['total_sasa'] / total_length
+    
+    # Add liability density if both available
+    if 'Total_Liabilities' in seq_results and 'Heavy_Length' in seq_results:
+        total_length = seq_results.get('Heavy_Length', 0) + seq_results.get('Light_Length', 0)
+        if total_length > 0:
+            combined['Liability_density'] = seq_results['Total_Liabilities'] / total_length
+    
+    return combined
+
+
+# Fix 4: Fix the flattening methods to match actual calculator outputs
+def _flatten_liability_results(self, liability_results: Dict) -> Dict:
+    """Flatten liability results for DataFrame."""
+    flat = {}
+    if isinstance(liability_results, dict):
+        flat['Total_Liabilities'] = liability_results.get('count', 0)
+        flat['N_Liability_Types'] = liability_results.get('total_possible', 0)
+        
+        # Count specific liability types from the liabilities list
+        liabilities = liability_results.get('liabilities', [])
+        liability_counts = {}
+        for liability in liabilities:
+            liability_name = liability.get('name', 'Unknown')
+            liability_counts[liability_name] = liability_counts.get(liability_name, 0) + 1
+        
+        # Add common liability types
+        flat['N_Glycosylation_Sites'] = liability_counts.get('N-linked glycosylation (NXS/T X not P)', 0)
+        flat['Deamidation_Sites'] = liability_counts.get('Asn deamidation (NG NS NT)', 0)
+        flat['Oxidation_Sites'] = (
+            liability_counts.get('Met oxidation (M)', 0) + 
+            liability_counts.get('Trp oxidation (W)', 0)
+        )
+        flat['Unpaired_Cysteines'] = liability_counts.get('Unpaired Cys (C)', 0)
+    
+    return flat
+
+
+def _flatten_sasa_results(self, sasa_results: Dict) -> Dict:
+    """Flatten SASA results for DataFrame."""
+    flat = {}
+    if isinstance(sasa_results, dict):
+        flat['Total_SASA'] = sasa_results.get('total_sasa', 0)
+        flat['Sidechain_SASA'] = sasa_results.get('total_sasa_sidechain', 0)
+        flat['N_Buried_Residues'] = sasa_results.get('n_buried', 0)
+        
+        # SAP results if included
+        flat['SAP_Score'] = sasa_results.get('sap_score', 0)
+        flat['N_High_SAP_Residues'] = sasa_results.get('n_high_sap', 0)
+        flat['Mean_Residue_SAP'] = sasa_results.get('mean_residue_sap', 0)
+    
+    return flat

@@ -1,30 +1,53 @@
-# Include documentation
+# MANIFEST.in - Package distribution manifest
+# ============================================
+
+# Documentation files
 include README.md
 include LICENSE
 include CHANGELOG.md
 include CONTRIBUTING.md
+include CITATION.cff
+include AUTHORS.md
 
-# Include package data
-recursive-include antibody_descriptors/data *.csv *.json
-recursive-include antibody_descriptors/data/tripeptides *.pdb
-recursive-include antibody_descriptors/data/config *.json
-
-# Include requirements
+# Configuration and requirements
 include requirements.txt
 include requirements-dev.txt
 include environment.yml
+include pyproject.toml
+include setup.py
+include Makefile
 
-# Include examples
-recursive-include examples *.py *.ipynb *.md
+# Package data files
+recursive-include AbXtract/data *.csv *.json *.yaml *.yml
+recursive-include AbXtract/data/tripeptides *.pdb
+recursive-include AbXtract/data/config *.json
+recursive-include AbXtract/data/test *.fasta *.pdb *.csv
+
+# Documentation
+recursive-include docs *.rst *.md *.txt *.py *.bat
+recursive-include docs/_static *
+recursive-include docs/_templates *
+prune docs/_build
+
+# Examples and tutorials
+recursive-include examples *.py *.ipynb *.md *.txt *.fasta *.csv
+recursive-include examples/data *.pdb *.fasta *.csv
 recursive-exclude examples *.pyc __pycache__
 
-# Include tests
-recursive-include tests *.py *.pdb *.fasta
+# Tests (include in source distribution)
+recursive-include tests *.py *.pdb *.fasta *.csv *.json
 recursive-exclude tests *.pyc __pycache__ .pytest_cache
 
-# Include docs
-recursive-include docs *.rst *.md *.txt
-recursive-exclude docs _build
+# Scripts and utilities
+include scripts/*.py
+include scripts/*.sh
+include scripts/*.bat
+
+# Configuration files
+include .pre-commit-config.yaml
+include pytest.ini
+include tox.ini
+include .gitignore
 
 # Exclude unnecessary files
 global-exclude *.pyc
@@ -32,9 +55,369 @@ global-exclude *.pyo
 global-exclude *.swp
 global-exclude .DS_Store
 global-exclude __pycache__
-global-exclude .git
-global-exclude .gitignore
+global-exclude .git*
 global-exclude .pytest_cache
 global-exclude .coverage
 global-exclude htmlcov
 global-exclude .mypy_cache
+global-exclude .tox
+global-exclude build
+global-exclude dist
+global-exclude *.egg-info
+
+# Exclude temporary and output files
+global-exclude *.tmp
+global-exclude *.log
+global-exclude *.out
+global-exclude *.err
+global-exclude *~
+global-exclude .#*
+
+# ==============================================
+# setup.cfg - Extended setup configuration
+[metadata]
+name = AbXtract
+version = attr: AbXtract.__version__.__version__
+author = Your Name
+author_email = your.email@example.com
+description = Comprehensive toolkit for antibody and nanobody descriptor calculations
+long_description = file: README.md
+long_description_content_type = text/markdown
+url = https://github.com/yourusername/AbXtract
+project_urls =
+    Bug Tracker = https://github.com/yourusername/AbXtract/issues
+    Documentation = https://abxtract.readthedocs.io
+    Source Code = https://github.com/yourusername/AbXtract
+    Changelog = https://github.com/yourusername/AbXtract/blob/main/CHANGELOG.md
+classifiers =
+    Development Status :: 4 - Beta
+    Intended Audience :: Science/Research
+    Topic :: Scientific/Engineering :: Bio-Informatics
+    Topic :: Scientific/Engineering :: Chemistry
+    License :: OSI Approved :: MIT License
+    Programming Language :: Python :: 3
+    Programming Language :: Python :: 3.8
+    Programming Language :: Python :: 3.9
+    Programming Language :: Python :: 3.10
+    Programming Language :: Python :: 3.11
+    Operating System :: OS Independent
+    Natural Language :: English
+keywords = antibody, nanobody, descriptors, developability, bioinformatics, protein-analysis
+
+[options]
+packages = find:
+python_requires = >=3.8
+include_package_data = True
+zip_safe = False
+install_requires =
+    numpy>=1.20.0
+    pandas>=1.3.0
+    scipy>=1.7.0
+    biopython>=1.79
+    click>=8.0.0
+    peptides>=0.3.0
+    prody>=2.0.0
+    freesasa>=2.1.0
+    anarci>=1.3
+    gemmi>=0.5.0
+    protpy>=1.0.0
+    tqdm>=4.62.0
+    openpyxl>=3.0.0
+    pyarrow>=6.0.0
+    matplotlib>=3.5.0
+    seaborn>=0.11.0
+    joblib>=1.1.0
+
+[options.packages.find]
+exclude =
+    tests*
+    docs*
+    examples*
+
+[options.extras_require]
+dev =
+    pytest>=7.0.0
+    pytest-cov>=3.0.0
+    pytest-xdist>=2.5.0
+    black>=22.0.0
+    flake8>=4.0.0
+    mypy>=0.950
+    isort>=5.10.0
+    pre-commit>=2.17.0
+    ipykernel>=6.0.0
+    jupyter>=1.0.0
+    notebook>=6.4.0
+docs =
+    sphinx>=4.5.0
+    sphinx-rtd-theme>=1.0.0
+    sphinx-autodoc-typehints>=1.17.0
+    sphinxcontrib-napoleon>=0.7
+    myst-parser>=0.17.0
+viz =
+    matplotlib>=3.5.0
+    seaborn>=0.11.0
+    plotly>=5.6.0
+    py3Dmol>=1.8.0
+all =
+    %(dev)s
+    %(docs)s
+    %(viz)s
+
+[options.entry_points]
+console_scripts =
+    abxtract = AbXtract.cli:cli
+    antibody-descriptors = AbXtract.cli:cli
+
+[options.package_data]
+AbXtract =
+    data/*.csv
+    data/*.json
+    data/tripeptides/*.pdb
+    data/config/*.json
+    data/test/*.fasta
+
+# ==============================================
+# tox.ini - Testing configuration
+[tox]
+envlist = py38,py39,py310,py311,lint,docs
+isolated_build = True
+
+[testenv]
+deps =
+    pytest>=7.0.0
+    pytest-cov>=3.0.0
+    pytest-xdist>=2.5.0
+commands =
+    pytest tests/ -v --cov=AbXtract --cov-report=term --cov-report=xml
+
+[testenv:lint]
+deps =
+    black
+    flake8
+    mypy
+    isort
+commands =
+    black --check AbXtract tests
+    flake8 AbXtract tests
+    isort --check-only AbXtract tests
+    mypy AbXtract
+
+[testenv:docs]
+deps =
+    sphinx>=4.5.0
+    sphinx-rtd-theme>=1.0.0
+changedir = docs
+commands =
+    sphinx-build -W -b html . _build/html
+
+# ==============================================
+# .pre-commit-config.yaml - Pre-commit hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+
+  - repo: https://github.com/psf/black
+    rev: 22.10.0
+    hooks:
+      - id: black
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.11.4
+    hooks:
+      - id: isort
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        args: [--max-line-length=88, --extend-ignore=E203]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v0.991
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-requests, types-setuptools]
+
+# ==============================================
+# pyproject.toml - Modern Python packaging (updated)
+[build-system]
+requires = ["setuptools>=61.0", "wheel", "setuptools-scm>=6.4.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "AbXtract"
+dynamic = ["version"]
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+description = "Comprehensive toolkit for antibody and nanobody descriptor calculations"
+readme = "README.md"
+license = {text = "MIT"}
+keywords = [
+    "antibody",
+    "nanobody", 
+    "descriptors",
+    "developability",
+    "bioinformatics",
+    "protein-analysis",
+    "structural-biology",
+    "therapeutics"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9", 
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+    "Natural Language :: English",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy>=1.20.0",
+    "pandas>=1.3.0",
+    "scipy>=1.7.0",
+    "biopython>=1.79",
+    "click>=8.0.0",
+    "peptides>=0.3.0", 
+    "prody>=2.0.0",
+    "freesasa>=2.1.0",
+    "anarci>=1.3",
+    "gemmi>=0.5.0",
+    "protpy>=1.0.0",
+    "tqdm>=4.62.0",
+    "openpyxl>=3.0.0",
+    "pyarrow>=6.0.0",
+    "matplotlib>=3.5.0",
+    "seaborn>=0.11.0",
+    "joblib>=1.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/AbXtract"
+Documentation = "https://abxtract.readthedocs.io"
+Repository = "https://github.com/yourusername/AbXtract"
+"Bug Tracker" = "https://github.com/yourusername/AbXtract/issues"
+Changelog = "https://github.com/yourusername/AbXtract/blob/main/CHANGELOG.md"
+
+[project.scripts]
+abxtract = "AbXtract.cli:cli"
+antibody-descriptors = "AbXtract.cli:cli"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=3.0.0",
+    "pytest-xdist>=2.5.0",
+    "pytest-benchmark>=3.4.0",
+    "black>=22.0.0",
+    "flake8>=4.0.0",
+    "mypy>=0.950",
+    "isort>=5.10.0",
+    "pylint>=2.12.0",
+    "pre-commit>=2.17.0",
+    "ipykernel>=6.0.0",
+    "jupyter>=1.0.0",
+    "notebook>=6.4.0",
+    "jupyterlab>=3.2.0",
+]
+docs = [
+    "sphinx>=4.5.0",
+    "sphinx-rtd-theme>=1.0.0",
+    "sphinx-autodoc-typehints>=1.17.0",
+    "sphinxcontrib-napoleon>=0.7",
+    "myst-parser>=0.17.0",
+    "sphinx-gallery>=0.10.0",
+]
+viz = [
+    "matplotlib>=3.5.0",
+    "seaborn>=0.11.0", 
+    "plotly>=5.6.0",
+    "bokeh>=2.4.0",
+    "py3Dmol>=1.8.0",
+]
+all = [
+    "AbXtract[dev,docs,viz]",
+]
+
+[tool.setuptools]
+packages = ["AbXtract"]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "AbXtract.__version__.__version__"}
+
+[tool.setuptools.package-data]
+"AbXtract" = [
+    "data/*.csv",
+    "data/*.json", 
+    "data/tripeptides/*.pdb",
+    "data/config/*.json",
+    "data/test/*.fasta",
+]
+
+# Tool configurations
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+show_error_codes = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--cov=AbXtract",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "requires_tools: marks tests requiring external tools",
+]
+
+[tool.coverage.run]
+source = ["AbXtract"]
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+    "*/setup.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]

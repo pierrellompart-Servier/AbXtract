@@ -1,21 +1,25 @@
-# Core dependencies
+# requirements.txt - Core dependencies for AbXtract
+# Core scientific computing
 numpy>=1.20.0
 pandas>=1.3.0
 scipy>=1.7.0
 matplotlib>=3.5.0
+seaborn>=0.11.0
 
-# Bio packages
+# Bioinformatics
 biopython>=1.79
 peptides>=0.3.0
-protpy>=1.0.0
 prody>=2.0.0
 
 # Structure analysis
 freesasa>=2.1.0
 gemmi>=0.5.0
 
-# Antibody numbering
+# Antibody-specific
 anarci>=1.3
+
+# Protein descriptors
+protpy>=1.0.0
 
 # CLI and utilities
 click>=8.0.0
@@ -24,7 +28,178 @@ tqdm>=4.62.0
 # File formats
 openpyxl>=3.0.0
 pyarrow>=6.0.0
+xlsxwriter>=3.0.0
 
-# Optional but recommended
+# Parallel processing
 joblib>=1.1.0
+
+# Optional scientific packages
 scikit-learn>=1.0.0
+
+# =================================
+# requirements-dev.txt - Development dependencies
+# Core dependencies (inherit from requirements.txt)
+-r requirements.txt
+
+# Testing
+pytest>=7.0.0
+pytest-cov>=3.0.0
+pytest-xdist>=2.5.0
+pytest-mock>=3.6.0
+pytest-benchmark>=3.4.0
+
+# Code quality and formatting
+black>=22.0.0
+flake8>=4.0.0
+mypy>=0.950
+isort>=5.10.0
+pylint>=2.12.0
+pre-commit>=2.17.0
+
+# Type checking
+types-requests>=2.27.0
+types-setuptools>=57.0.0
+
+# Documentation
+sphinx>=4.5.0
+sphinx-rtd-theme>=1.0.0
+sphinx-autodoc-typehints>=1.17.0
+sphinxcontrib-napoleon>=0.7
+myst-parser>=0.17.0
+sphinx-gallery>=0.10.0
+
+# Jupyter development
+ipykernel>=6.0.0
+jupyter>=1.0.0
+notebook>=6.4.0
+jupyterlab>=3.2.0
+nbconvert>=6.4.0
+
+# Profiling and debugging
+line-profiler>=3.4.0
+memory-profiler>=0.60.0
+ipdb>=0.13.0
+snakeviz>=2.1.0
+
+# Build and distribution
+build>=0.7.0
+twine>=3.8.0
+wheel>=0.37.0
+setuptools>=61.0.0
+setuptools-scm>=6.4.0
+
+# Visualization extras
+plotly>=5.6.0
+bokeh>=2.4.0
+py3Dmol>=1.8.0
+
+# Database support (optional)
+sqlalchemy>=1.4.0
+sqlite3  # Built-in
+
+# =================================
+# environment.yml - Conda environment
+name: abxtract
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+  - pytorch
+
+dependencies:
+  # Python version
+  - python=3.9
+
+  # Core scientific packages (conda versions often better optimized)
+  - numpy>=1.20
+  - pandas>=1.3
+  - scipy>=1.7
+  - matplotlib>=3.5
+  - seaborn>=0.11
+  - scikit-learn>=1.0
+  - joblib>=1.1
+
+  # External computational biology tools
+  - dssp  # Secondary structure
+  - muscle  # Sequence alignment
+  - clustalw  # Alternative alignment
+  - blast  # Sequence similarity
+
+  # Development tools
+  - pip
+  - ipykernel
+  - jupyter
+  - jupyterlab
+  - black
+  - pytest
+  - pytest-cov
+  - sphinx
+  - make
+
+  # System tools
+  - git
+  - curl
+  - wget
+
+  # Pip-only dependencies
+  - pip:
+    - peptides>=0.3.0
+    - protpy>=1.0.0
+    - prody>=2.0.0
+    - freesasa>=2.1.0
+    - anarci>=1.3
+    - gemmi>=0.5.0
+    - click>=8.0.0
+    - tqdm>=4.62.0
+    - openpyxl>=3.0.0
+    - pyarrow>=6.0.0
+    - xlsxwriter>=3.0.0
+    - plotly>=5.6.0
+    - py3Dmol>=1.8.0
+    - propka>=3.4.0
+    
+    # Development extras
+    - mypy>=0.950
+    - isort>=5.10.0
+    - pylint>=2.12.0
+    - pre-commit>=2.17.0
+    - sphinx-rtd-theme>=1.0.0
+    - sphinx-autodoc-typehints>=1.17.0
+    - build>=0.7.0
+    - twine>=3.8.0
+
+# =================================
+# requirements-optional.txt - Optional external tools
+# External computational tools (install separately)
+
+# DSSP - Secondary structure assignment
+# Install: conda install -c conda-forge dssp
+# Or download from: https://swift.cmbi.umcn.nl/gv/dssp/
+
+# PROPKA - pKa prediction  
+# Install: pip install propka
+# Or conda install -c conda-forge propka
+
+# Arpeggio - Interaction analysis
+# Install: git clone https://github.com/PDBeurope/arpeggio.git
+# Follow installation instructions in repository
+
+# Reduce - Hydrogen addition
+# Download from: http://kinemage.biochem.duke.edu/software/reduce.php
+
+# Alternative structure tools
+# PyMOL - Visualization (optional)
+# ChimeraX - Advanced visualization (optional)
+# VMD - Molecular dynamics visualization (optional)
+
+# =================================
+# Docker requirements
+# docker-requirements.txt - For containerized deployment
+# Base requirements
+-r requirements.txt
+
+# Additional container-specific packages
+gunicorn>=20.1.0  # WSGI server
+redis>=4.0.0      # Caching
+celery>=5.2.0     # Task queue
+psutil>=5.8.0     # System monitoring

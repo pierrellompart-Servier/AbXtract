@@ -1,53 +1,385 @@
-.PHONY: help clean test install dev-install format lint docs
+# Makefile for AbXtract - Antibody Descriptor Analysis Toolkit
+# =============================================================
 
-help:
-	@echo "Available commands:"
-	@echo "  install      Install package in production mode"
-	@echo "  dev-install  Install package in development mode"
-	@echo "  test         Run tests"
-	@echo "  format       Format code with black and isort"
-	@echo "  lint         Run linters"
-	@echo "  docs         Build documentation"
-	@echo "  clean        Clean build artifacts"
-	@echo "  dist         Build distribution packages"
+# Variables
+PYTHON := python
+PIP := pip
+PACKAGE_NAME := AbXtract
+TEST_DIR := tests
+DOCS_DIR := docs
+EXAMPLES_DIR := examples
+DATA_DIR := data
 
-install:
-	pip install .
+# Version detection
+VERSION := $(shell $(PYTHON) -c "import AbXtract; print(AbXtract.__version__)")
 
-dev-install:
-	pip install -e .[dev,docs,viz]
+# Colors for output
+RED := \033[0;31m
+GREEN := \033[0;32m
+YELLOW := \033[0;33m
+BLUE := \033[0;34m
+NC := \033[0m # No Color
+
+# Default target
+.DEFAULT_GOAL := help
+
+# =============================================================
+# Help
+# =============================================================
+
+.PHONY: help
+help: ## Show this help message
+	@echo "$(BLUE)AbXtract - Antibody Descriptor Analysis Toolkit$(NC)"
+	@echo "=================================================="
+	@echo ""
+	@echo "$(GREEN)Available targets:$(NC)"
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(YELLOW)%-20s$(NC) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+	@echo "$(GREEN)Package Information:$(NC)"
+	@echo "  Version: $(VERSION)"
+	@echo "  Python:  $(shell $(PYTHON) --version)"
+	@echo ""
+
+# =============================================================
+# Environment Setup
+# =============================================================
+
+.PHONY: install
+install: ## Install package in production mode
+	@echo "$(GREEN)Installing AbXtract in production mode...$(NC)"
+	$(PIP) install .
+
+.PHONY: install-dev
+install-dev: ## Install package in development mode with all dependencies
+	@echo "$(GREEN)Installing AbXtract in development mode...$(NC)"
+	$(PIP) install -e .[dev,docs,viz]
+	@echo "$(GREEN)Installing pre-commit hooks...$(NC)"
 	pre-commit install
+	@echo "$(GREEN)Development installation complete!$(NC)"
 
-test:
-	pytest tests/ -v --cov=antibody_descriptors --cov-report=html
+.PHONY: install-conda
+install-conda: ## Create conda environment and install package
+	@echo "$(GREEN)Creating conda environment from environment.yml...$(NC)"
+	conda env create -f environment.yml
+	@echo "$(GREEN)Conda environment 'abxtract' created!$(NC)"
+	@echo "$(YELLOW)Activate with: conda activate abxtract$(NC)"
 
-format:
-	black antibody_descriptors tests
-	isort antibody_descriptors tests
+.PHONY: install-external-tools
+install-external-tools: ## Install external computational tools
+	@echo "$(GREEN)Installing external computational tools...$(NC)"
+	@echo "$(YELLOW)Installing DSSP...$(NC)"
+	conda install -c conda-forge dssp || echo "$(RED)DSSP installation failed$(NC)"
+	@echo "$(YELLOW)Installing PROPKA...$(NC)"
+	$(PIP) install propka || echo "$(RED)PROPKA installation failed$(NC)"
+	@echo "$(YELLOW)Installing MUSCLE...$(NC)"
+	conda install -c bioconda muscle || echo "$(RED)MUSCLE installation failed$(NC)"
+	@echo "$(GREEN)External tools installation attempted$(NC)"
+	@echo "$(YELLOW)Note: Some tools may require manual installation$(NC)"
 
-lint:
-	flake8 antibody_descriptors tests
-	mypy antibody_descriptors
-	pylint antibody_descriptors
+.PHONY: requirements
+requirements: ## Install/update all requirements
+	@echo "$(GREEN)Installing/updating requirements...$(NC)"
+	$(PIP) install --upgrade pip setuptools wheel
+	$(PIP) install -r requirements.txt
+	$(PIP) install -r requirements-dev.txt
 
-docs:
-	cd docs && make clean && make html
+# =============================================================
+# Testing
+# =============================================================
 
-clean:
+.PHONY: test
+test: ## Run tests
+	@echo "$(GREEN)Running tests...$(NC)"
+	pytest $(TEST_DIR) -v --cov=$(PACKAGE_NAME) --cov-report=html --cov-report=term
+
+.PHONY: test-fast
+test-fast: ## Run tests (excluding slow tests)
+	@echo "$(GREEN)Running fast tests...$(NC)"
+	pytest $(TEST_DIR) -v -m "not slow" --cov=$(PACKAGE_NAME) --cov-report=term
+
+.PHONY: test-integration
+test-integration: ## Run integration tests
+	@echo "$(GREEN)Running integration tests...$(NC)"
+	pytest $(TEST_DIR) -v -m "integration" --cov=$(PACKAGE_NAME)
+
+.PHONY: test-examples
+test-examples: ## Test example scripts and notebooks
+	@echo "$(GREEN)Testing example scripts...$(NC)"
+	$(PYTHON) examples/test_abxtract_simple.py --output-dir ./test_output
+	@echo "$(GREEN)Testing Jupyter notebooks...$(NC)"
+	jupyter nbconvert --to notebook --execute examples/*.ipynb --inplace || echo "$(YELLOW)Notebook testing skipped$(NC)"
+
+.PHONY: benchmark
+benchmark: ## Run performance benchmarks
+	@echo "$(GREEN)Running benchmarks...$(NC)"
+	pytest $(TEST_DIR) -v -m "benchmark" --benchmark-only
+
+# =============================================================
+# Code Quality
+# =============================================================
+
+.PHONY: format
+format: ## Format code with black and isort
+	@echo "$(GREEN)Formatting code...$(NC)"
+	black $(PACKAGE_NAME) $(TEST_DIR) $(EXAMPLES_DIR)
+	isort $(PACKAGE_NAME) $(TEST_DIR) $(EXAMPLES_DIR)
+	@echo "$(GREEN)Code formatting complete!$(NC)"
+
+.PHONY: lint
+lint: ## Run linters (flake8, mypy, pylint)
+	@echo "$(GREEN)Running linters...$(NC)"
+	@echo "$(YELLOW)Running flake8...$(NC)"
+	flake8 $(PACKAGE_NAME) $(TEST_DIR)
+	@echo "$(YELLOW)Running mypy...$(NC)"
+	mypy $(PACKAGE_NAME) || echo "$(YELLOW)MyPy found issues$(NC)"
+	@echo "$(YELLOW)Running pylint...$(NC)"
+	pylint $(PACKAGE_NAME) || echo "$(YELLOW)Pylint found issues$(NC)"
+	@echo "$(GREEN)Linting complete!$(NC)"
+
+.PHONY: check
+check: format lint test ## Run all quality checks
+	@echo "$(GREEN)All quality checks completed!$(NC)"
+
+.PHONY: pre-commit
+pre-commit: ## Run pre-commit hooks on all files
+	@echo "$(GREEN)Running pre-commit hooks...$(NC)"
+	pre-commit run --all-files
+
+# =============================================================
+# Documentation
+# =============================================================
+
+.PHONY: docs
+docs: ## Build documentation
+	@echo "$(GREEN)Building documentation...$(NC)"
+	cd $(DOCS_DIR) && make clean && make html
+	@echo "$(GREEN)Documentation built! Open docs/_build/html/index.html$(NC)"
+
+.PHONY: docs-serve
+docs-serve: docs ## Build and serve documentation locally
+	@echo "$(GREEN)Serving documentation at http://localhost:8000$(NC)"
+	cd $(DOCS_DIR)/_build/html && $(PYTHON) -m http.server 8000
+
+.PHONY: docs-check
+docs-check: ## Check documentation for errors
+	@echo "$(GREEN)Checking documentation...$(NC)"
+	cd $(DOCS_DIR) && make linkcheck
+	sphinx-build -W -b html $(DOCS_DIR) $(DOCS_DIR)/_build/html
+
+# =============================================================
+# Data and Examples
+# =============================================================
+
+.PHONY: setup-test-data
+setup-test-data: ## Set up test data and environment
+	@echo "$(GREEN)Setting up test data environment...$(NC)"
+	$(PYTHON) setup_test_environment.py
+	@echo "$(GREEN)Test environment ready!$(NC)"
+
+.PHONY: download-example-data
+download-example-data: ## Download example PDB structures for testing
+	@echo "$(GREEN)Downloading example data...$(NC)"
+	mkdir -p $(DATA_DIR)/examples
+	@echo "$(YELLOW)Downloading example PDB structures...$(NC)"
+	curl -s https://files.rcsb.org/download/1HZH.pdb -o $(DATA_DIR)/test/example_1HZH.pdb || echo "$(RED)Download failed$(NC)"
+	curl -s https://files.rcsb.org/download/1IGT.pdb -o $(DATA_DIR)/test/example_1IGT.pdb || echo "$(RED)Download failed$(NC)"
+	@echo "$(GREEN)Example data download complete!$(NC)"
+
+.PHONY: validate-installation
+validate-installation: ## Validate that AbXtract is properly installed
+	@echo "$(GREEN)Validating AbXtract installation...$(NC)"
+	$(PYTHON) -c "import AbXtract; print('✅ AbXtract import successful')"
+	$(PYTHON) -c "from AbXtract import AntibodyDescriptorCalculator; print('✅ Main calculator import successful')"
+	$(PYTHON) -m AbXtract.cli --version || echo "$(YELLOW)CLI validation failed$(NC)"
+	$(PYTHON) examples/test_abxtract_simple.py --help || echo "$(YELLOW)Example script validation failed$(NC)"
+	@echo "$(GREEN)Installation validation complete!$(NC)"
+
+# =============================================================
+# Building and Distribution
+# =============================================================
+
+.PHONY: clean
+clean: ## Clean build artifacts and cache files
+	@echo "$(GREEN)Cleaning build artifacts...$(NC)"
 	rm -rf build dist *.egg-info
 	rm -rf htmlcov .coverage .pytest_cache
-	rm -rf .mypy_cache
-	find . -type d -name __pycache__ -exec rm -rf {} +
+	rm -rf .mypy_cache .tox
+	rm -rf $(DOCS_DIR)/_build
+	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete
 	find . -type f -name "*.pyo" -delete
 	find . -type f -name "*~" -delete
+	find . -type f -name ".coverage.*" -delete
+	@echo "$(GREEN)Clean complete!$(NC)"
 
-dist: clean
-	python -m build
+.PHONY: build
+build: clean ## Build distribution packages
+	@echo "$(GREEN)Building distribution packages...$(NC)"
+	$(PYTHON) -m build
+	@echo "$(GREEN)Build complete! Packages in dist/$(NC)"
+
+.PHONY: build-check
+build-check: build ## Build and check distribution packages
+	@echo "$(GREEN)Checking built packages...$(NC)"
 	twine check dist/*
+	@echo "$(GREEN)Package check complete!$(NC)"
 
-upload-test: dist
+.PHONY: upload-test
+upload-test: build-check ## Upload to Test PyPI
+	@echo "$(YELLOW)Uploading to Test PyPI...$(NC)"
+	@echo "$(RED)Make sure you have configured your Test PyPI credentials!$(NC)"
 	twine upload --repository testpypi dist/*
 
-upload: dist
-	twine upload dist/*
+.PHONY: upload
+upload: build-check ## Upload to PyPI (PRODUCTION)
+	@echo "$(RED)WARNING: This will upload to PRODUCTION PyPI!$(NC)"
+	@read -p "Are you sure? [y/N] " -n 1 -r; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		echo ""; \
+		echo "$(GREEN)Uploading to PyPI...$(NC)"; \
+		twine upload dist/*; \
+	else \
+		echo ""; \
+		echo "$(YELLOW)Upload cancelled.$(NC)"; \
+	fi
+
+# =============================================================
+# Docker
+# =============================================================
+
+.PHONY: docker-build
+docker-build: ## Build Docker image
+	@echo "$(GREEN)Building Docker image...$(NC)"
+	docker build -t abxtract:$(VERSION) .
+	docker tag abxtract:$(VERSION) abxtract:latest
+
+.PHONY: docker-run
+docker-run: ## Run Docker container
+	@echo "$(GREEN)Running Docker container...$(NC)"
+	docker run -it --rm -p 8888:8888 abxtract:latest
+
+.PHONY: docker-test
+docker-test: ## Test Docker image
+	@echo "$(GREEN)Testing Docker image...$(NC)"
+	docker run --rm abxtract:latest python -m pytest tests/ -v
+
+# =============================================================
+# Development Utilities
+# =============================================================
+
+.PHONY: profile
+profile: ## Profile the code for performance
+	@echo "$(GREEN)Profiling AbXtract performance...$(NC)"
+	$(PYTHON) -m cProfile -s cumulative -m AbXtract.cli calculate --help > profile_output.txt
+	@echo "$(GREEN)Profile saved to profile_output.txt$(NC)"
+
+.PHONY: security-check
+security-check: ## Check for security vulnerabilities
+	@echo "$(GREEN)Checking for security vulnerabilities...$(NC)"
+	pip-audit || echo "$(YELLOW)Install pip-audit: pip install pip-audit$(NC)"
+	bandit -r $(PACKAGE_NAME) || echo "$(YELLOW)Install bandit: pip install bandit$(NC)"
+
+.PHONY: dependency-check
+dependency-check: ## Check dependency status
+	@echo "$(GREEN)Checking dependencies...$(NC)"
+	pip list --outdated
+	pip check
+
+.PHONY: size-check
+size-check: ## Check package size
+	@echo "$(GREEN)Checking package size...$(NC)"
+	du -sh $(PACKAGE_NAME)
+	@echo "$(GREEN)Distribution size:$(NC)"
+	ls -lh dist/ 2>/dev/null || echo "No distributions found. Run 'make build' first."
+
+# =============================================================
+# Release Management
+# =============================================================
+
+.PHONY: version
+version: ## Show current version
+	@echo "Current version: $(VERSION)"
+
+.PHONY: version-bump-patch
+version-bump-patch: ## Bump patch version (0.1.0 -> 0.1.1)
+	@echo "$(GREEN)Bumping patch version...$(NC)"
+	bumpversion patch || echo "$(RED)Install bumpversion: pip install bump2version$(NC)"
+
+.PHONY: version-bump-minor
+version-bump-minor: ## Bump minor version (0.1.0 -> 0.2.0)
+	@echo "$(GREEN)Bumping minor version...$(NC)"
+	bumpversion minor || echo "$(RED)Install bumpversion: pip install bump2version$(NC)"
+
+.PHONY: version-bump-major
+version-bump-major: ## Bump major version (0.1.0 -> 1.0.0)
+	@echo "$(GREEN)Bumping major version...$(NC)"
+	bumpversion major || echo "$(RED)Install bumpversion: pip install bump2version$(NC)"
+
+.PHONY: changelog
+changelog: ## Generate changelog
+	@echo "$(GREEN)Generating changelog...$(NC)"
+	git-changelog > CHANGELOG.md || echo "$(YELLOW)Install git-changelog: pip install git-changelog$(NC)"
+
+# =============================================================
+# Continuous Integration Helpers
+# =============================================================
+
+.PHONY: ci-install
+ci-install: ## Install dependencies for CI
+	$(PIP) install --upgrade pip setuptools wheel
+	$(PIP) install -e .[dev,docs,viz]
+
+.PHONY: ci-test
+ci-test: ## Run tests for CI
+	pytest $(TEST_DIR) -v --cov=$(PACKAGE_NAME) --cov-report=xml --cov-report=term
+
+.PHONY: ci-build
+ci-build: ## Build for CI
+	$(PYTHON) -m build
+	twine check dist/*
+
+# =============================================================
+# All-in-one targets
+# =============================================================
+
+.PHONY: dev-setup
+dev-setup: install-dev setup-test-data ## Complete development setup
+	@echo "$(GREEN)Development environment setup complete!$(NC)"
+	@echo "$(YELLOW)Next steps:$(NC)"
+	@echo "  1. Run tests: make test"
+	@echo "  2. Check code quality: make check"
+	@echo "  3. View documentation: make docs-serve"
+	@echo "  4. Run examples: make test-examples"
+
+.PHONY: full-check
+full-check: clean format lint test docs build-check ## Run all checks before release
+	@echo "$(GREEN)All checks passed! Ready for release.$(NC)"
+
+.PHONY: quick-test
+quick-test: test-fast lint ## Quick development test cycle
+	@echo "$(GREEN)Quick test cycle complete!$(NC)"
+
+# =============================================================
+# Information targets
+# =============================================================
+
+.PHONY: info
+info: ## Show system information
+	@echo "$(BLUE)System Information$(NC)"
+	@echo "=================="
+	@echo "Python: $(shell $(PYTHON) --version)"
+	@echo "Pip: $(shell $(PIP) --version)"
+	@echo "Package: $(PACKAGE_NAME) v$(VERSION)"
+	@echo "Platform: $(shell $(PYTHON) -c 'import platform; print(platform.platform())')"
+	@echo "Working Directory: $(PWD)"
+	@echo ""
+	@echo "$(BLUE)Package Dependencies$(NC)"
+	@echo "===================="
+	@$(PIP) show $(PACKAGE_NAME) 2>/dev/null || echo "Package not installed"
+
+# =============================================================
+# Phony target list (for reference)
+# =============================================================
+
+.PHONY: all
+all: dev-setup full-check ## Run complete setup and validation
