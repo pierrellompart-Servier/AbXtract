@@ -158,9 +158,9 @@ class AntibodyDescriptorCalculator:
         
         # NEW: ProtPy calculator
         self.protpy_calculator = ProtPyDescriptorCalculator(
-            lag=self.config.get('protpy_lag', 30),
-            weight=self.config.get('protpy_weight', 0.05),
-            distance_matrix=self.config.get('protpy_distance_matrix', 'schneider-wrede')
+            lag=self.config.protpy_lag,
+            weight=self.config.protpy_weight,
+            distance_matrix=self.config.protpy_distance_matrix
         )
 
     
@@ -184,7 +184,7 @@ class AntibodyDescriptorCalculator:
 
         # NEW: Extended analyzers
         self.disulfide_analyzer = DisulfideBondAnalyzer(
-            distance_cutoff=self.config.get('disulfide_cutoff', 2.5)
+            distance_cutoff=self.config.disulfide_cutoff
         )
 
         self.charge_dispersion_analyzer = ChargeDispersionAnalyzer()
@@ -351,7 +351,7 @@ class AntibodyDescriptorCalculator:
                 if self.config.verbose:
                     raise
         
-        if self.config.get('calculate_protpy', True):
+        if self.config.calculate_protpy:
             logger.info("  Calculating ProtPy descriptors...")
             try:
                 protpy_results = self.protpy_calculator.calculate_for_chains(
@@ -524,7 +524,7 @@ class AntibodyDescriptorCalculator:
                     raise
 
         # Calculate disulfide bonds
-        if self.config.get('calculate_disulfides', True):
+        if self.config.calculate_disulfides:
             logger.info("  Analyzing disulfide bonds...")
             try:
                 disulfide_results = self.disulfide_analyzer.analyze(pdb_file)
@@ -535,7 +535,7 @@ class AntibodyDescriptorCalculator:
                     raise
 
         # Calculate charge dispersion
-        if self.config.get('calculate_charge_dispersion', True):
+        if self.config.calculate_charge_dispersion:
             logger.info("  Calculating charge dispersion...")
             try:
                 dispersion_results = self.charge_dispersion_analyzer.calculate(pdb_file)
@@ -546,7 +546,7 @@ class AntibodyDescriptorCalculator:
                     raise
 
         # Extended SASA analysis
-        if self.config.get('calculate_extended_sasa', True):
+        if self.config.calculate_extended_sasa:
             logger.info("  Calculating extended SASA metrics...")
             try:
                 extended_sasa_results = self.extended_sasa_calculator.calculate_exposed_sidechains(pdb_file)
@@ -583,38 +583,29 @@ class AntibodyDescriptorCalculator:
         # Run Extended PROPKA
         if self.config.calculate_propka:
             logger.info("  Running extended PROPKA analysis...")
-            try:
-                # Run standard PROPKA first
-                propka_results = self.propka_analyzer.run(pdb_file)
-                results.update(self._flatten_propka_results(propka_results))
+            # Run standard PROPKA first
+            propka_results = self.propka_analyzer.run(pdb_file)
+            results.update(self._flatten_propka_results(propka_results))
+            # Get the .pka file path (assuming it's saved)
+            pka_file = Path(self.config.temp_dir) / f"{structure_id}.pka"
+            if pka_file.exists():
+                # Extended analysis
+                extended_propka = self.extended_propka_analyzer.parse_detailed(pka_file)
+                # Add extended metrics
+                if extended_propka['summary'] is not None:
+                    summary = extended_propka['summary'].iloc[0].to_dict()
+                    for key, value in summary.items():
+                        if key not in results:  # Don't override existing values
+                            results[f'propka_{key}'] = value
+                # Add residue-level statistics
+                if extended_propka['residues'] is not None:
+                    residues_df = extended_propka['residues']
+                    results['n_ionizable_residues'] = len(residues_df)
+                    results['mean_pKa_shift'] = residues_df.get('pKa_shift', pd.Series()).mean()
+                # Add stability metrics
+                stability = self.extended_propka_analyzer.calculate_stability_metrics(pka_file)
+                results.update({f'stability_{k}': v for k, v in stability.items()})
 
-                # Get the .pka file path (assuming it's saved)
-                pka_file = Path(self.config.temp_dir) / f"{structure_id}.pka"
-                if pka_file.exists():
-                    # Extended analysis
-                    extended_propka = self.extended_propka_analyzer.parse_detailed(pka_file)
-
-                    # Add extended metrics
-                    if extended_propka['summary'] is not None:
-                        summary = extended_propka['summary'].iloc[0].to_dict()
-                        for key, value in summary.items():
-                            if key not in results:  # Don't override existing values
-                                results[f'propka_{key}'] = value
-
-                    # Add residue-level statistics
-                    if extended_propka['residues'] is not None:
-                        residues_df = extended_propka['residues']
-                        results['n_ionizable_residues'] = len(residues_df)
-                        results['mean_pKa_shift'] = residues_df.get('pKa_shift', pd.Series()).mean()
-
-                    # Add stability metrics
-                    stability = self.extended_propka_analyzer.calculate_stability_metrics(pka_file)
-                    results.update({f'stability_{k}': v for k, v in stability.items()})
-
-            except Exception as e:
-                logger.error(f"  Error in extended PROPKA analysis: {e}")
-                if self.config.verbose:
-                    raise
 
 
 

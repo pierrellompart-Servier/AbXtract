@@ -22,7 +22,7 @@ import numpy as np
 from typing import Dict, List, Optional, Union
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 import logging
-
+import peptides
 logger = logging.getLogger(__name__)
 
 

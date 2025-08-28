@@ -11,6 +11,12 @@ from .charge import ChargeAnalyzer
 from .dssp import DSSPAnalyzer
 from .propka import PropkaAnalyzer
 from .arpeggio import ArpeggioAnalyzer
+from .extended_analyzers import (
+    DisulfideBondAnalyzer,
+    ChargeDispersionAnalyzer,
+    ExtendedSASACalculator,
+    ExtendedPropkaAnalyzer
+)
 
 __all__ = [
     'SASACalculator',
@@ -18,5 +24,9 @@ __all__ = [
     'ChargeAnalyzer',
     'DSSPAnalyzer',
     'PropkaAnalyzer',
-    'ArpeggioAnalyzer'
+    'ArpeggioAnalyzer',
+    'DisulfideBondAnalyzer',
+    'ChargeDispersionAnalyzer',
+    'ExtendedSASACalculator',
+    'ExtendedPropkaAnalyzer'
 ]
