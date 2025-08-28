@@ -1,0 +1,303 @@
+"""
+Additional fixes and missing components for AbXtract
+"""
+
+# Fix 1: Add a complete example configuration data file
+# Create AbXtract/data/config.json
+
+CONFIG_JSON = {
+    "numbering_scheme": "imgt",
+    "pH": 7.0,
+    "temperature": 25.0,
+    "restrict_species": True,
+    "dssp_path": "dssp",
+    "propka_path": "propka3", 
+    "arpeggio_path": "pdbe-arpeggio",
+    "reduce_path": "reduce",
+    "muscle_path": "muscle",
+    "liability_definitions_path": None,
+    "peptide_window": 5,
+    "peptide_angle": 100,
+    "hydrophobicity_scale": "Eisenberg",
+    "sasa_probe_radius": 1.4,
+    "sasa_n_points": 100,
+    "sasa_cutoff": 0.075,
+    "charge_distance_cutoff": 4.0,
+    "ss_bond_distance": 4.0,
+    "cdr_definition": "imgt",
+    "output_format": "csv",
+    "verbose": True,
+    "n_jobs": 1,
+    "temp_dir": "./temp",
+    "keep_temp_files": False,
+    "calculate_liabilities": True,
+    "calculate_bashour": True,
+    "calculate_peptide": True,
+    "calculate_protpy": False,
+    "calculate_sasa": True,
+    "calculate_charge": True,
+    "calculate_dssp": True,
+    "calculate_propka": True,
+    "calculate_arpeggio": True,
+    "calculate_cdr_properties": True,
+    "max_iterations": 1000,
+    "convergence_threshold": 1e-6,
+    "random_seed": 42
+}
+
+# Fix 2: Add error handling wrapper for external tools
+# Add to utils/tool_check.py
+
+def check_external_tool(tool_path: str, tool_name: str) -> bool:
+    """
+    Check if external tool is available and working.
+    
+    Parameters
+    ----------
+    tool_path : str
+        Path to the tool executable
+    tool_name : str
+        Name of the tool for error messages
+        
+    Returns
+    -------
+    bool
+        True if tool is available and working
+    """
+    import shutil
+    import subprocess
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    # First check if tool is in PATH
+    if not shutil.which(tool_path):
+        logger.warning(f"{tool_name} not found at {tool_path}")
+        return False
+    
+    # Try to run the tool with a help flag
+    try:
+        help_flags = ['--help', '-h', '--version', '-v']
+        for flag in help_flags:
+            try:
+                result = subprocess.run(
+                    [tool_path, flag],
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+                if result.returncode in [0, 1]:  # Some tools return 1 for help
+                    return True
+            except (subprocess.TimeoutExpired, subprocess.CalledProcessError):
+                continue
+        
+        logger.warning(f"{tool_name} found but not responding to common flags")
+        return False
+        
+    except Exception as e:
+        logger.warning(f"Error checking {tool_name}: {e}")
+        return False
+
+
+# Fix 3: Add comprehensive validation for calculator inputs
+# Add to core/main.py
+
+def _validate_inputs(self, heavy_sequence=None, light_sequence=None, pdb_file=None):
+    """
+    Validate inputs before running calculations.
+    
+    Parameters
+    ----------
+    heavy_sequence : str, optional
+        Heavy chain sequence
+    light_sequence : str, optional  
+        Light chain sequence
+    pdb_file : str or Path, optional
+        PDB file path
+        
+    Raises
+    ------
+    ValueError
+        If inputs are invalid
+    """
+    from ..utils import validate_sequence, validate_pdb, is_valid_amino_acid_sequence
+    
+    # Check that at least one input is provided
+    if not any([heavy_sequence, light_sequence, pdb_file]):
+        raise ValueError("At least one input (sequence or structure) must be provided")
+    
+    # Validate sequences if provided
+    if heavy_sequence:
+        if not is_valid_amino_acid_sequence(heavy_sequence):
+            raise ValueError("Invalid heavy chain sequence")
+        if len(heavy_sequence) < 10:
+            raise ValueError("Heavy chain sequence too short (minimum 10 residues)")
+        if len(heavy_sequence) > 1000:
+            raise ValueError("Heavy chain sequence too long (maximum 1000 residues)")
+    
+    if light_sequence:
+        if not is_valid_amino_acid_sequence(light_sequence):
+            raise ValueError("Invalid light chain sequence")
+        if len(light_sequence) < 10:
+            raise ValueError("Light chain sequence too short (minimum 10 residues)")
+        if len(light_sequence) > 1000:
+            raise ValueError("Light chain sequence too long (maximum 1000 residues)")
+    
+    # Validate PDB file if provided
+    if pdb_file:
+        try:
+            validate_pdb(pdb_file)
+        except Exception as e:
+            raise ValueError(f"Invalid PDB file: {e}")
+
+
+# Fix 4: Add method to get available calculators and their status
+# Add to core/main.py
+
+def get_calculator_status(self) -> Dict[str, Dict]:
+    """
+    Get status of all calculators and external tools.
+    
+    Returns
+    -------
+    dict
+        Dictionary with calculator status information
+    """
+    from ..utils.tool_check import check_external_tool
+    
+    status = {
+        'sequence_calculators': {
+            'liability_analyzer': {
+                'available': hasattr(self, 'liability_analyzer'),
+                'enabled': self.config.calculate_liabilities,
+                'description': 'Sequence liability detection'
+            },
+            'bashour_calculator': {
+                'available': hasattr(self, 'bashour_calculator'),
+                'enabled': self.config.calculate_bashour,
+                'description': 'Bashour physicochemical descriptors'
+            },
+            'peptide_calculator': {
+                'available': hasattr(self, 'peptide_calculator'),
+                'enabled': self.config.calculate_peptide,
+                'description': 'Comprehensive peptide descriptors'
+            },
+            'numbering': {
+                'available': hasattr(self, 'numbering'),
+                'enabled': True,
+                'description': 'Antibody sequence numbering'
+            }
+        },
+        'structure_calculators': {
+            'sasa_calculator': {
+                'available': hasattr(self, 'sasa_calculator'),
+                'enabled': self.config.calculate_sasa,
+                'description': 'SASA and SAP calculation'
+            },
+            'charge_analyzer': {
+                'available': hasattr(self, 'charge_analyzer'),
+                'enabled': self.config.calculate_charge,
+                'description': 'Charge distribution analysis'
+            },
+            'dssp_analyzer': {
+                'available': hasattr(self, 'dssp_analyzer'),
+                'enabled': self.config.calculate_dssp,
+                'tool_available': check_external_tool(self.config.dssp_path, 'DSSP'),
+                'description': 'Secondary structure analysis'
+            },
+            'propka_analyzer': {
+                'available': hasattr(self, 'propka_analyzer'),
+                'enabled': self.config.calculate_propka,
+                'tool_available': check_external_tool(self.config.propka_path, 'PROPKA'),
+                'description': 'pKa prediction and pH-dependent properties'
+            },
+            'arpeggio_analyzer': {
+                'available': hasattr(self, 'arpeggio_analyzer'),
+                'enabled': self.config.calculate_arpeggio,
+                'tool_available': check_external_tool(self.config.arpeggio_path, 'Arpeggio'),
+                'description': 'Molecular interaction analysis'
+            }
+        },
+        'external_tools': self.config.check_external_tools()
+    }
+    
+    return status
+
+
+# Fix 5: Add comprehensive summary method
+# Add to core/main.py
+
+def get_detailed_summary(self) -> Dict[str, Any]:
+    """
+    Get detailed summary of all calculated descriptors and statistics.
+    
+    Returns
+    -------
+    dict
+        Comprehensive summary with statistics and metadata
+    """
+    summary = {
+        'timestamp': self.metadata['timestamp'],
+        'version': self.metadata['version'],
+        'config_summary': {
+            'numbering_scheme': self.config.numbering_scheme,
+            'pH': self.config.pH,
+            'temperature': self.config.temperature
+        },
+        'input_summary': {},
+        'calculation_summary': {},
+        'results_summary': {},
+        'tool_status': self.get_calculator_status()
+    }
+    
+    # Analyze inputs
+    if 'sequence' in self.results:
+        seq_data = self.results['sequence']
+        summary['input_summary']['sequence'] = {
+            'type': seq_data.get('Type', 'Unknown'),
+            'heavy_length': seq_data.get('Heavy_Length', 0),
+            'light_length': seq_data.get('Light_Length', 0),
+            'total_length': seq_data.get('Heavy_Length', 0) + seq_data.get('Light_Length', 0)
+        }
+    
+    if 'structure' in self.results:
+        struct_data = self.results['structure']
+        summary['input_summary']['structure'] = {
+            'n_chains': struct_data.get('N_Chains', 0),
+            'pdb_file': struct_data.get('PDB_File', 'Unknown')
+        }
+    
+    # Calculate result statistics
+    total_descriptors = 0
+    categories = {}
+    
+    for result_type, data in self.results.items():
+        if isinstance(data, dict):
+            n_descriptors = len([k for k, v in data.items() 
+                               if isinstance(v, (int, float)) and not k.endswith('ID')])
+            categories[result_type] = n_descriptors
+            total_descriptors += n_descriptors
+    
+    summary['results_summary'] = {
+        'total_descriptors': total_descriptors,
+        'categories': categories,
+        'analyses_performed': list(self.results.keys())
+    }
+    
+    # Add key metrics if available
+    key_metrics = {}
+    if 'sequence' in self.results:
+        seq_data = self.results['sequence']
+        if 'Total_Liabilities' in seq_data:
+            key_metrics['total_liabilities'] = seq_data['Total_Liabilities']
+    
+    if 'structure' in self.results:
+        struct_data = self.results['structure'] 
+        if 'SAP_Score' in struct_data:
+            key_metrics['sap_score'] = struct_data['SAP_Score']
+        if 'DI_score' in struct_data:
+            key_metrics['developability_index'] = struct_data['DI_score']
+    
+    summary['key_metrics'] = key_metrics
+    
+    return summary

@@ -1,0 +1,1872 @@
+{
+  "metadata": {
+    "timestamp": "20250828_092653",
+    "abxtract_version": "0.1.0",
+    "analysis_type": "Sequence only",
+    "input_sequences": {
+      "heavy_length": 446,
+      "light_length": 214
+    },
+    "pdb_available": false
+  },
+  "results": {
+    "SampleID": "TestAb_Complete",
+    "SeqID": "TestAb_Complete",
+    "Type": "Antibody",
+    "Heavy_Length": 446,
+    "Light_Length": 214,
+    "H": [
+      [
+        [
+          1,
+          " "
+        ],
+        "Q"
+      ],
+      [
+        [
+          2,
+          " "
+        ],
+        "V"
+      ],
+      [
+        [
+          3,
+          " "
+        ],
+        "Q"
+      ],
+      [
+        [
+          4,
+          " "
+        ],
+        "L"
+      ],
+      [
+        [
+          5,
+          " "
+        ],
+        "V"
+      ],
+      [
+        [
+          6,
+          " "
+        ],
+        "Q"
+      ],
+      [
+        [
+          7,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          8,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          9,
+          " "
+        ],
+        "A"
+      ],
+      [
+        [
+          10,
+          " "
+        ],
+        "E"
+      ],
+      [
+        [
+          11,
+          " "
+        ],
+        "V"
+      ],
+      [
+        [
+          12,
+          " "
+        ],
+        "K"
+      ],
+      [
+        [
+          13,
+          " "
+        ],
+        "K"
+      ],
+      [
+        [
+          14,
+          " "
+        ],
+        "P"
+      ],
+      [
+        [
+          15,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          16,
+          " "
+        ],
+        "A"
+      ],
+      [
+        [
+          17,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          18,
+          " "
+        ],
+        "V"
+      ],
+      [
+        [
+          19,
+          " "
+        ],
+        "K"
+      ],
+      [
+        [
+          20,
+          " "
+        ],
+        "V"
+      ],
+      [
+        [
+          21,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          22,
+          " "
+        ],
+        "C"
+      ],
+      [
+        [
+          23,
+          " "
+        ],
+        "K"
+      ],
+      [
+        [
+          24,
+          " "
+        ],
+        "A"
+      ],
+      [
+        [
+          25,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          26,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          27,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          28,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          29,
+          " "
+        ],
+        "F"
+      ],
+      [
+        [
+          30,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          31,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          32,
+          " "
+        ],
+        "Y"
+      ],
+      [
+        [
+          33,
+          " "
+        ],
+        "A"
+      ],
+      [
+        [
+          34,
+          " "
+        ],
+        "I"
+      ],
+      [
+        [
+          35,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          36,
+          " "
+        ],
+        "W"
+      ],
+      [
+        [
+          37,
+          " "
+        ],
+        "V"
+      ],
+      [
+        [
+          38,
+          " "
+        ],
+        "R"
+      ],
+      [
+        [
+          39,
+          " "
+        ],
+        "Q"
+      ],
+      [
+        [
+          40,
+          " "
+        ],
+        "A"
+      ],
+      [
+        [
+          41,
+          " "
+        ],
+        "P"
+      ],
+      [
+        [
+          42,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          43,
+          " "
+        ],
+        "Q"
+      ],
+      [
+        [
+          44,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          45,
+          " "
+        ],
+        "L"
+      ],
+      [
+        [
+          46,
+          " "
+        ],
+        "E"
+      ],
+      [
+        [
+          47,
+          " "
+        ],
+        "W"
+      ],
+      [
+        [
+          48,
+          " "
+        ],
+        "M"
+      ],
+      [
+        [
+          49,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          50,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          51,
+          " "
+        ],
+        "I"
+      ],
+      [
+        [
+          52,
+          " "
+        ],
+        "I"
+      ],
+      [
+        [
+          52,
+          "A"
+        ],
+        "P"
+      ],
+      [
+        [
+          53,
+          " "
+        ],
+        "I"
+      ],
+      [
+        [
+          54,
+          " "
+        ],
+        "F"
+      ],
+      [
+        [
+          55,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          56,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          57,
+          " "
+        ],
+        "A"
+      ],
+      [
+        [
+          58,
+          " "
+        ],
+        "N"
+      ],
+      [
+        [
+          59,
+          " "
+        ],
+        "Y"
+      ],
+      [
+        [
+          60,
+          " "
+        ],
+        "A"
+      ],
+      [
+        [
+          61,
+          " "
+        ],
+        "Q"
+      ],
+      [
+        [
+          62,
+          " "
+        ],
+        "K"
+      ],
+      [
+        [
+          63,
+          " "
+        ],
+        "F"
+      ],
+      [
+        [
+          64,
+          " "
+        ],
+        "Q"
+      ],
+      [
+        [
+          65,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          66,
+          " "
+        ],
+        "R"
+      ],
+      [
+        [
+          67,
+          " "
+        ],
+        "V"
+      ],
+      [
+        [
+          68,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          69,
+          " "
+        ],
+        "I"
+      ],
+      [
+        [
+          70,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          71,
+          " "
+        ],
+        "A"
+      ],
+      [
+        [
+          72,
+          " "
+        ],
+        "D"
+      ],
+      [
+        [
+          73,
+          " "
+        ],
+        "E"
+      ],
+      [
+        [
+          74,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          75,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          76,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          77,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          78,
+          " "
+        ],
+        "A"
+      ],
+      [
+        [
+          79,
+          " "
+        ],
+        "Y"
+      ],
+      [
+        [
+          80,
+          " "
+        ],
+        "M"
+      ],
+      [
+        [
+          81,
+          " "
+        ],
+        "E"
+      ],
+      [
+        [
+          82,
+          " "
+        ],
+        "L"
+      ],
+      [
+        [
+          82,
+          "A"
+        ],
+        "S"
+      ],
+      [
+        [
+          82,
+          "B"
+        ],
+        "S"
+      ],
+      [
+        [
+          82,
+          "C"
+        ],
+        "L"
+      ],
+      [
+        [
+          83,
+          " "
+        ],
+        "R"
+      ],
+      [
+        [
+          84,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          85,
+          " "
+        ],
+        "E"
+      ],
+      [
+        [
+          86,
+          " "
+        ],
+        "D"
+      ],
+      [
+        [
+          87,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          88,
+          " "
+        ],
+        "A"
+      ],
+      [
+        [
+          89,
+          " "
+        ],
+        "V"
+      ],
+      [
+        [
+          90,
+          " "
+        ],
+        "Y"
+      ],
+      [
+        [
+          91,
+          " "
+        ],
+        "Y"
+      ],
+      [
+        [
+          92,
+          " "
+        ],
+        "C"
+      ],
+      [
+        [
+          93,
+          " "
+        ],
+        "A"
+      ],
+      [
+        [
+          94,
+          " "
+        ],
+        "R"
+      ],
+      [
+        [
+          95,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          96,
+          " "
+        ],
+        "H"
+      ],
+      [
+        [
+          97,
+          " "
+        ],
+        "Y"
+      ],
+      [
+        [
+          98,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          99,
+          " "
+        ],
+        "L"
+      ],
+      [
+        [
+          101,
+          " "
+        ],
+        "D"
+      ],
+      [
+        [
+          102,
+          " "
+        ],
+        "Y"
+      ],
+      [
+        [
+          103,
+          " "
+        ],
+        "W"
+      ],
+      [
+        [
+          104,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          105,
+          " "
+        ],
+        "Q"
+      ],
+      [
+        [
+          106,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          107,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          108,
+          " "
+        ],
+        "L"
+      ],
+      [
+        [
+          109,
+          " "
+        ],
+        "V"
+      ],
+      [
+        [
+          110,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          111,
+          " "
+        ],
+        "V"
+      ],
+      [
+        [
+          112,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          113,
+          " "
+        ],
+        "S"
+      ]
+    ],
+    "L": [
+      [
+        [
+          1,
+          " "
+        ],
+        "D"
+      ],
+      [
+        [
+          2,
+          " "
+        ],
+        "I"
+      ],
+      [
+        [
+          3,
+          " "
+        ],
+        "Q"
+      ],
+      [
+        [
+          4,
+          " "
+        ],
+        "M"
+      ],
+      [
+        [
+          5,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          6,
+          " "
+        ],
+        "Q"
+      ],
+      [
+        [
+          7,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          8,
+          " "
+        ],
+        "P"
+      ],
+      [
+        [
+          9,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          10,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          11,
+          " "
+        ],
+        "L"
+      ],
+      [
+        [
+          12,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          13,
+          " "
+        ],
+        "A"
+      ],
+      [
+        [
+          14,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          15,
+          " "
+        ],
+        "V"
+      ],
+      [
+        [
+          16,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          17,
+          " "
+        ],
+        "D"
+      ],
+      [
+        [
+          18,
+          " "
+        ],
+        "R"
+      ],
+      [
+        [
+          19,
+          " "
+        ],
+        "V"
+      ],
+      [
+        [
+          20,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          21,
+          " "
+        ],
+        "I"
+      ],
+      [
+        [
+          22,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          23,
+          " "
+        ],
+        "C"
+      ],
+      [
+        [
+          24,
+          " "
+        ],
+        "R"
+      ],
+      [
+        [
+          25,
+          " "
+        ],
+        "A"
+      ],
+      [
+        [
+          26,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          27,
+          " "
+        ],
+        "H"
+      ],
+      [
+        [
+          28,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          29,
+          " "
+        ],
+        "I"
+      ],
+      [
+        [
+          30,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          31,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          32,
+          " "
+        ],
+        "Y"
+      ],
+      [
+        [
+          33,
+          " "
+        ],
+        "L"
+      ],
+      [
+        [
+          34,
+          " "
+        ],
+        "A"
+      ],
+      [
+        [
+          35,
+          " "
+        ],
+        "W"
+      ],
+      [
+        [
+          36,
+          " "
+        ],
+        "Y"
+      ],
+      [
+        [
+          37,
+          " "
+        ],
+        "Q"
+      ],
+      [
+        [
+          38,
+          " "
+        ],
+        "Q"
+      ],
+      [
+        [
+          39,
+          " "
+        ],
+        "K"
+      ],
+      [
+        [
+          40,
+          " "
+        ],
+        "P"
+      ],
+      [
+        [
+          41,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          42,
+          " "
+        ],
+        "K"
+      ],
+      [
+        [
+          43,
+          " "
+        ],
+        "A"
+      ],
+      [
+        [
+          44,
+          " "
+        ],
+        "P"
+      ],
+      [
+        [
+          45,
+          " "
+        ],
+        "K"
+      ],
+      [
+        [
+          46,
+          " "
+        ],
+        "L"
+      ],
+      [
+        [
+          47,
+          " "
+        ],
+        "L"
+      ],
+      [
+        [
+          48,
+          " "
+        ],
+        "I"
+      ],
+      [
+        [
+          49,
+          " "
+        ],
+        "Y"
+      ],
+      [
+        [
+          50,
+          " "
+        ],
+        "A"
+      ],
+      [
+        [
+          51,
+          " "
+        ],
+        "A"
+      ],
+      [
+        [
+          52,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          53,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          54,
+          " "
+        ],
+        "L"
+      ],
+      [
+        [
+          55,
+          " "
+        ],
+        "Q"
+      ],
+      [
+        [
+          56,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          57,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          58,
+          " "
+        ],
+        "V"
+      ],
+      [
+        [
+          59,
+          " "
+        ],
+        "P"
+      ],
+      [
+        [
+          60,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          61,
+          " "
+        ],
+        "R"
+      ],
+      [
+        [
+          62,
+          " "
+        ],
+        "F"
+      ],
+      [
+        [
+          63,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          64,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          65,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          66,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          67,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          68,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          69,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          70,
+          " "
+        ],
+        "D"
+      ],
+      [
+        [
+          71,
+          " "
+        ],
+        "F"
+      ],
+      [
+        [
+          72,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          73,
+          " "
+        ],
+        "L"
+      ],
+      [
+        [
+          74,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          75,
+          " "
+        ],
+        "I"
+      ],
+      [
+        [
+          76,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          77,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          78,
+          " "
+        ],
+        "L"
+      ],
+      [
+        [
+          79,
+          " "
+        ],
+        "Q"
+      ],
+      [
+        [
+          80,
+          " "
+        ],
+        "P"
+      ],
+      [
+        [
+          81,
+          " "
+        ],
+        "E"
+      ],
+      [
+        [
+          82,
+          " "
+        ],
+        "D"
+      ],
+      [
+        [
+          83,
+          " "
+        ],
+        "F"
+      ],
+      [
+        [
+          84,
+          " "
+        ],
+        "A"
+      ],
+      [
+        [
+          85,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          86,
+          " "
+        ],
+        "Y"
+      ],
+      [
+        [
+          87,
+          " "
+        ],
+        "Y"
+      ],
+      [
+        [
+          88,
+          " "
+        ],
+        "C"
+      ],
+      [
+        [
+          89,
+          " "
+        ],
+        "Q"
+      ],
+      [
+        [
+          90,
+          " "
+        ],
+        "Q"
+      ],
+      [
+        [
+          91,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          92,
+          " "
+        ],
+        "Y"
+      ],
+      [
+        [
+          93,
+          " "
+        ],
+        "S"
+      ],
+      [
+        [
+          94,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          95,
+          " "
+        ],
+        "P"
+      ],
+      [
+        [
+          96,
+          " "
+        ],
+        "L"
+      ],
+      [
+        [
+          97,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          98,
+          " "
+        ],
+        "F"
+      ],
+      [
+        [
+          99,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          100,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          101,
+          " "
+        ],
+        "G"
+      ],
+      [
+        [
+          102,
+          " "
+        ],
+        "T"
+      ],
+      [
+        [
+          103,
+          " "
+        ],
+        "K"
+      ],
+      [
+        [
+          104,
+          " "
+        ],
+        "V"
+      ],
+      [
+        [
+          105,
+          " "
+        ],
+        "E"
+      ],
+      [
+        [
+          106,
+          " "
+        ],
+        "I"
+      ],
+      [
+        [
+          107,
+          " "
+        ],
+        "K"
+      ]
+    ],
+    "Total_Liabilities": 0,
+    "N_Glycosylation_Sites": 0,
+    "Deamidation_Sites": 0,
+    "Oxidation_Sites": 0,
+    "Unpaired_Cysteines": 0,
+    "Heavy_Molecular Weight": 48473.79784,
+    "Light_Molecular Weight": 23173.78954,
+    "Heavy_Seq Length": 446,
+    "Light_Seq Length": 214,
+    "Heavy_Average Residue Weight": 108.68564538116591,
+    "Light_Average Residue Weight": 108.2887361682243,
+    "Heavy_pI": 8.06375063676387,
+    "Light_pI": 7.590943313203752,
+    "Heavy_Charges (all pH values)": {
+      "1": 53.90808431508109,
+      "2": 53.211917551029444,
+      "3": 49.07141592113334,
+      "4": 33.94329618906496,
+      "5": 18.091234231688354,
+      "6": 10.380758691781063,
+      "7": 5.245622679926027,
+      "8": 0.4495825757230173,
+      "9": -7.152660376542969,
+      "10": -22.79498629822785,
+      "11": -48.90761749725093,
+      "12": -60.178866339670044,
+      "13": -66.54612513974874,
+      "14": -68.69338174539341
+    },
+    "Light_Charges (all pH values)": {
+      "1": 22.931097096179496,
+      "2": 22.43859614650606,
+      "3": 20.051020885288303,
+      "4": 12.530821155001231,
+      "5": 5.469652047835608,
+      "6": 2.6632316225920136,
+      "7": 0.9684730045398777,
+      "8": -1.1003580447369488,
+      "9": -4.66808474702968,
+      "10": -12.176418114747808,
+      "11": -23.79652711656266,
+      "12": -28.94473546554889,
+      "13": -32.55211031070461,
+      "14": -33.81847973562621
+    },
+    "Heavy_Charge_pH_1": 53.90808431508109,
+    "Light_Charge_pH_1": 22.931097096179496,
+    "Heavy_Charge_pH_2": 53.211917551029444,
+    "Light_Charge_pH_2": 22.43859614650606,
+    "Heavy_Charge_pH_3": 49.07141592113334,
+    "Light_Charge_pH_3": 20.051020885288303,
+    "Heavy_Charge_pH_4": 33.94329618906496,
+    "Light_Charge_pH_4": 12.530821155001231,
+    "Heavy_Charge_pH_5": 18.091234231688354,
+    "Light_Charge_pH_5": 5.469652047835608,
+    "Heavy_Charge_pH_6": 10.380758691781063,
+    "Light_Charge_pH_6": 2.6632316225920136,
+    "Heavy_Charge_pH_7": 5.245622679926027,
+    "Light_Charge_pH_7": 0.9684730045398777,
+    "Heavy_Charge_pH_8": 0.4495825757230173,
+    "Light_Charge_pH_8": -1.1003580447369488,
+    "Heavy_Charge_pH_9": -7.152660376542969,
+    "Light_Charge_pH_9": -4.66808474702968,
+    "Heavy_Charge_pH_10": -22.79498629822785,
+    "Light_Charge_pH_10": -12.176418114747808,
+    "Heavy_Charge_pH_11": -48.90761749725093,
+    "Light_Charge_pH_11": -23.79652711656266,
+    "Heavy_Charge_pH_12": -60.178866339670044,
+    "Light_Charge_pH_12": -28.94473546554889,
+    "Heavy_Charge_pH_13": -66.54612513974874,
+    "Light_Charge_pH_13": -32.55211031070461,
+    "Heavy_Charge_pH_14": -68.69338174539341,
+    "Light_Charge_pH_14": -33.81847973562621,
+    "Heavy_Molecular Extinction Coefficient": 72935,
+    "Light_Molecular Extinction Coefficient": 26150,
+    "Heavy_Molecular Extinction Coefficient (Cysteine bridges)": 625,
+    "Light_Molecular Extinction Coefficient (Cysteine bridges)": 250,
+    "Heavy_% Molecular Extinction Coefficient": 15.046273089791804,
+    "Light_% Molecular Extinction Coefficient": 11.284300288851245,
+    "Heavy_% Molecular Extinction Coefficient (Cysteine bridges)": 0.12893563695235313,
+    "Light_% Molecular Extinction Coefficient (Cysteine bridges)": 0.10788049989341535,
+    "Heavy_Instability Index": 46.15336322869956,
+    "Light_Instability Index": 57.21074766355141,
+    "Heavy_Aliphatic Index": 71.59192825112108,
+    "Light_Aliphatic Index": 67.42990654205606,
+    "Heavy_Hydrophobicity": 0.03278026905829598,
+    "Light_Hydrophobicity": -4.6728971962615824e-05,
+    "Heavy_Hydrophobic moment": 0.7023132500689353,
+    "Light_Hydrophobic moment": 0.7138656527447272,
+    "Heavy_Aromatic content": 11.210762331838566,
+    "Light_Aromatic content": 10.74766355140187,
+    "Heavy_Tiny content": 34.97757847533632,
+    "Light_Tiny content": 40.18691588785047,
+    "Heavy_Small content": 59.64125560538116,
+    "Light_Small content": 58.41121495327103,
+    "Heavy_Aliphatic content": 25.112107623318387,
+    "Light_Aliphatic content": 23.83177570093458,
+    "Heavy_Nonpolar content": 52.01793721973094,
+    "Light_Nonpolar content": 47.19626168224299,
+    "Heavy_Polar content": 47.98206278026906,
+    "Light_Polar content": 52.80373831775701,
+    "Heavy_Basic content": 11.883408071748878,
+    "Light_Basic content": 10.2803738317757,
+    "Heavy_Acidic content": 8.520179372197308,
+    "Light_Acidic content": 8.411214953271028,
+    "Peptide_chain": "Heavy",
+    "Peptide_length": 446,
+    "Peptide_aliphatic_index": 71.59192825112108,
+    "Peptide_boman": 1.3580044843049328,
+    "Peptide_charge_pH7.4": 3.7654134267698685,
+    "Peptide_isoelectric_point": 8.321377475745976,
+    "Peptide_instability_index": 46.15336322869956,
+    "Peptide_molecular_weight": 48473.79784,
+    "Peptide_molar_extinction_reduced": NaN,
+    "Peptide_molar_extinction_cystines": NaN,
+    "Peptide_AF1_Polarity_Accessibility_Hydrophobicity": -0.025704386210762344,
+    "Peptide_AF2_Secondary_Structure_Propensity": 0.20766046405829594,
+    "Peptide_AF3_Molecular_Size": -0.499655969058296,
+    "Peptide_AF4_Codon_Composition": 0.37599082556053814,
+    "Peptide_AF5_Electrostatic_Charge": -0.3050860980269058,
+    "Peptide_BLOSUM1_Helix_Index": 0.18894618834080718,
+    "Peptide_BLOSUM2_Sheet_Index": -0.23477578475336325,
+    "Peptide_BLOSUM3_Turn_Index": -0.03955156950672646,
+    "Peptide_BLOSUM4_Hydrophobicity_Index": -0.02206278026905829,
+    "Peptide_BLOSUM5_Electronic_Index": -0.06383408071748879,
+    "Peptide_BLOSUM6_Aliphatic_Index": 0.06621076233183856,
+    "Peptide_BLOSUM7_Aromatic_Index": 0.06923766816143496,
+    "Peptide_BLOSUM8_Polar_Index": -0.16809417040358743,
+    "Peptide_BLOSUM9_Charged_Index": 0.16154708520179376,
+    "Peptide_BLOSUM10_Small_Index": 0.0038116591928251146,
+    "Peptide_PP1_Polarity": -0.09325112107623318,
+    "Peptide_PP2_Hydrophobicity": -0.3674215246636771,
+    "Peptide_PP3_H_Bonding": 0.0831390134529148,
+    "Peptide_F1_Hydrophobicity_FASGAI": -0.3329708520179372,
+    "Peptide_F2_Alpha_Turn_Propensity": -0.17194843049327352,
+    "Peptide_F3_Bulky_Properties": -0.2263520179372197,
+    "Peptide_F4_Compositional_Characteristic": 0.3594103139013452,
+    "Peptide_F5_Local_Flexibility": 0.15242600896860992,
+    "Peptide_F6_Electronic_Properties": -0.021470852017937195,
+    "Peptide_KF1_Helix_Bend_Preference": 0.11053811659192826,
+    "Peptide_KF2_Side_Chain_Size": -0.2968161434977578,
+    "Peptide_KF3_Extended_Structure_Preference": 0.07331838565022421,
+    "Peptide_KF4_Hydrophobicity": 0.08903587443946186,
+    "Peptide_KF5_Double_Bend_Preference": 0.040762331838565015,
+    "Peptide_KF6_Partial_Specific_Volume": -0.3428923766816144,
+    "Peptide_KF7_Flat_Extended_Preference": -0.08230941704035873,
+    "Peptide_KF8_Alpha_Region_Occurrence": -0.18697309417040356,
+    "Peptide_KF9_pK_C": -0.14428251121076233,
+    "Peptide_KF10_Surrounding_Hydrophobicity": 0.05526905829596412,
+    "Peptide_MSWHIM1": -0.3437219730941704,
+    "Peptide_MSWHIM2": 0.445,
+    "Peptide_MSWHIM3": -0.455896860986547,
+    "Peptide_E1": 0.036221973094170405,
+    "Peptide_E2": 0.06236322869955157,
+    "Peptide_E3": -0.025917040358744405,
+    "Peptide_E4": -0.067847533632287,
+    "Peptide_E5": -0.01396188340807175,
+    "Peptide_PD1": -0.6062780269058295,
+    "Peptide_PD2": -0.03237668161434977,
+    "Peptide_PRIN1": -1.1640654708520182,
+    "Peptide_PRIN2": -1.5173883408071747,
+    "Peptide_PRIN3": 0.7226730941704035,
+    "Peptide_ProtFP1": -0.9609417040358745,
+    "Peptide_ProtFP2": -0.9008744394618833,
+    "Peptide_ProtFP3": -0.11459641255605381,
+    "Peptide_ProtFP4": 0.36726457399103135,
+    "Peptide_ProtFP5": -0.19995515695067267,
+    "Peptide_ProtFP6": -0.05991031390134526,
+    "Peptide_ProtFP7": 0.2198206278026906,
+    "Peptide_ProtFP8": 0.12937219730941704,
+    "Peptide_SV1": 0.22191479820627805,
+    "Peptide_SV2": 0.05533408071748879,
+    "Peptide_SV3": -0.04657399103139013,
+    "Peptide_SV4": 0.015780269058295958,
+    "Peptide_ST1": -0.9072937219730941,
+    "Peptide_ST2": -0.27758744394618834,
+    "Peptide_ST3": -0.23466367713004488,
+    "Peptide_ST4": -0.029221973094170402,
+    "Peptide_ST5": -0.07909192825112106,
+    "Peptide_ST6": -0.45739237668161425,
+    "Peptide_ST7": 0.09143049327354262,
+    "Peptide_ST8": 0.17309641255605385,
+    "Peptide_SVGER1": -0.48203632286995507,
+    "Peptide_SVGER2": -0.5887730941704036,
+    "Peptide_SVGER3": -0.13740067264573994,
+    "Peptide_SVGER4": 0.1437468609865471,
+    "Peptide_SVGER5": 0.345339461883408,
+    "Peptide_SVGER6": 0.0324188340807175,
+    "Peptide_SVGER7": -0.7995883408071749,
+    "Peptide_SVGER8": -0.04780560538116595,
+    "Peptide_SVGER9": -0.24295874439461881,
+    "Peptide_SVGER10": -0.2891715246636772,
+    "Peptide_SVGER11": 0.5045914798206279,
+    "Peptide_T1": -4.829573991031389,
+    "Peptide_T2": -0.3183183856502242,
+    "Peptide_T3": 0.07511210762331838,
+    "Peptide_T4": 0.13829596412556056,
+    "Peptide_T5": 0.7037668161434978,
+    "Peptide_VHSE1": -0.08591928251121075,
+    "Peptide_VHSE2": -0.21208520179372198,
+    "Peptide_VHSE3": -0.2781165919282512,
+    "Peptide_VHSE4": -0.13852017937219735,
+    "Peptide_VHSE5": -0.039663677130044844,
+    "Peptide_VHSE6": -0.23562780269058295,
+    "Peptide_VHSE7": 0.07125560538116588,
+    "Peptide_VHSE8": 0.11033632286995514,
+    "Peptide_VSTPV1": -0.8627354260089686,
+    "Peptide_VSTPV2": -0.01015695067264573,
+    "Peptide_VSTPV3": 0.39786995515695067,
+    "Peptide_VSTPV4": -0.42087443946188335,
+    "Peptide_VSTPV5": 0.1774887892376682,
+    "Peptide_VSTPV6": -0.3490807174887892,
+    "Peptide_Z1_Lipophilicity": 0.1847982062780269,
+    "Peptide_Z2_Steric_Bulk_Polarizability": -0.6151121076233185,
+    "Peptide_Z3_Polarity_Charge": -0.11329596412556057,
+    "Peptide_Z4_Electronegativity_Heat_Formation": -0.4412780269058296,
+    "Peptide_Z5_Electrophilicity_Hardness": 0.2473542600896861,
+    "Peptide_count_A": 25,
+    "Peptide_count_C": 11,
+    "Peptide_count_D": 16,
+    "Peptide_count_E": 22,
+    "Peptide_count_F": 13,
+    "Peptide_count_G": 31,
+    "Peptide_count_H": 10,
+    "Peptide_count_I": 10,
+    "Peptide_count_K": 33,
+    "Peptide_count_L": 32,
+    "Peptide_count_M": 4,
+    "Peptide_count_N": 15,
+    "Peptide_count_P": 34,
+    "Peptide_count_Q": 19,
+    "Peptide_count_R": 10,
+    "Peptide_count_S": 54,
+    "Peptide_count_T": 35,
+    "Peptide_count_V": 45,
+    "Peptide_count_W": 8,
+    "Peptide_count_Y": 19,
+    "Peptide_frequency_A": 0.05605381165919283,
+    "Peptide_frequency_C": 0.02466367713004484,
+    "Peptide_frequency_D": 0.03587443946188341,
+    "Peptide_frequency_E": 0.04932735426008968,
+    "Peptide_frequency_F": 0.02914798206278027,
+    "Peptide_frequency_G": 0.06950672645739911,
+    "Peptide_frequency_H": 0.02242152466367713,
+    "Peptide_frequency_I": 0.02242152466367713,
+    "Peptide_frequency_K": 0.07399103139013453,
+    "Peptide_frequency_L": 0.07174887892376682,
+    "Peptide_frequency_M": 0.008968609865470852,
+    "Peptide_frequency_N": 0.033632286995515695,
+    "Peptide_frequency_P": 0.07623318385650224,
+    "Peptide_frequency_Q": 0.042600896860986545,
+    "Peptide_frequency_R": 0.02242152466367713,
+    "Peptide_frequency_S": 0.1210762331838565,
+    "Peptide_frequency_T": 0.07847533632286996,
+    "Peptide_frequency_V": 0.10089686098654709,
+    "Peptide_frequency_W": 0.017937219730941704,
+    "Peptide_frequency_Y": 0.042600896860986545,
+    "Peptide_protpy_aa_A": "0    5.605\nName: A, dtype: float64",
+    "Peptide_protpy_aa_C": "0    2.466\nName: C, dtype: float64",
+    "Peptide_protpy_aa_D": "0    3.587\nName: D, dtype: float64",
+    "Peptide_protpy_aa_E": "0    4.933\nName: E, dtype: float64",
+    "Peptide_protpy_aa_F": "0    2.915\nName: F, dtype: float64",
+    "Peptide_protpy_aa_G": "0    6.951\nName: G, dtype: float64",
+    "Peptide_protpy_aa_H": "0    2.242\nName: H, dtype: float64",
+    "Peptide_protpy_aa_I": "0    2.242\nName: I, dtype: float64",
+    "Peptide_protpy_aa_K": "0    7.399\nName: K, dtype: float64",
+    "Peptide_protpy_aa_L": "0    7.175\nName: L, dtype: float64",
+    "Peptide_protpy_aa_M": "0    0.897\nName: M, dtype: float64",
+    "Peptide_protpy_aa_N": "0    3.363\nName: N, dtype: float64",
+    "Peptide_protpy_aa_P": "0    7.623\nName: P, dtype: float64",
+    "Peptide_protpy_aa_Q": "0    4.26\nName: Q, dtype: float64",
+    "Peptide_protpy_aa_R": "0    2.242\nName: R, dtype: float64",
+    "Peptide_protpy_aa_S": "0    12.108\nName: S, dtype: float64",
+    "Peptide_protpy_aa_T": "0    7.848\nName: T, dtype: float64",
+    "Peptide_protpy_aa_V": "0    10.09\nName: V, dtype: float64",
+    "Peptide_protpy_aa_W": "0    1.794\nName: W, dtype: float64",
+    "Peptide_protpy_aa_Y": "0    4.26\nName: Y, dtype: float64",
+    "Peptide_hydrophobic_moment_w5_a100": 0.8645651076164933
+  },
+  "summary": {
+    "timestamp": "2025-08-28T09:26:50.371027",
+    "n_descriptors_calculated": 254,
+    "analyses_performed": [
+      "sequence"
+    ],
+    "n_sequence_descriptors": 254,
+    "total_liabilities": 0,
+    "heavy_pI": 8.06375063676387
+  }
+}

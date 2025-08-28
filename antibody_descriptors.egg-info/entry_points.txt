@@ -1,0 +1,3 @@
+[console_scripts]
+ab-desc = antibody_descriptors.cli:cli
+antibody-descriptors = antibody_descriptors.cli:cli
