@@ -71,6 +71,22 @@ class Config:
         Number of parallel jobs for computations
     """
     
+    # Add new configuration options
+    calculate_protpy = True
+    calculate_disulfides = True
+    calculate_charge_dispersion = True
+    calculate_extended_sasa = True
+    
+    # ProtPy parameters
+    protpy_lag = 30
+    protpy_weight = 0.05
+    protpy_distance_matrix = 'schneider-wrede'
+    
+    # Disulfide parameters
+    disulfide_cutoff = 2.5
+
+        
+        
     # General parameters
     numbering_scheme: str = 'imgt'
     pH: float = 7.0

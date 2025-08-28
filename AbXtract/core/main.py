@@ -17,18 +17,24 @@ import tempfile
 import shutil
 
 from .config import Config, load_config
+# Add these imports to your existing imports in main.py
 from ..sequence import (
     SequenceLiabilityAnalyzer,
     BashourDescriptorCalculator,
     PeptideDescriptorCalculator,
-    AntibodyNumbering
+    AntibodyNumbering,
+    ProtPyDescriptorCalculator  # NEW
 )
 from ..structure import (
     SASACalculator,
     ChargeAnalyzer,
     DSSPAnalyzer,
     PropkaAnalyzer,
-    ArpeggioAnalyzer
+    ArpeggioAnalyzer,
+    DisulfideBondAnalyzer,      # NEW
+    ChargeDispersionAnalyzer,   # NEW
+    ExtendedSASACalculator,      # NEW
+    ExtendedPropkaAnalyzer       # NEW
 )
 from ..utils import (
     parse_pdb,
@@ -150,6 +156,14 @@ class AntibodyDescriptorCalculator:
             restrict_species=self.config.restrict_species
         )
         
+        # NEW: ProtPy calculator
+        self.protpy_calculator = ProtPyDescriptorCalculator(
+            lag=self.config.get('protpy_lag', 30),
+            weight=self.config.get('protpy_weight', 0.05),
+            distance_matrix=self.config.get('protpy_distance_matrix', 'schneider-wrede')
+        )
+
+    
         # Structure-based calculators
         self.sasa_calculator = SASACalculator(
             probe_radius=self.config.sasa_probe_radius,
@@ -161,21 +175,40 @@ class AntibodyDescriptorCalculator:
             distance_cutoff=self.config.charge_distance_cutoff
         )
         
-        self.dssp_analyzer = DSSPAnalyzer(
-            dssp_path=self.config.dssp_path
-        )
         
         self.propka_analyzer = PropkaAnalyzer(
             propka_path=self.config.propka_path,
             pH=self.config.pH,
             temp_dir=self.config.temp_dir
         )
-        
+
+        # NEW: Extended analyzers
+        self.disulfide_analyzer = DisulfideBondAnalyzer(
+            distance_cutoff=self.config.get('disulfide_cutoff', 2.5)
+        )
+
+        self.charge_dispersion_analyzer = ChargeDispersionAnalyzer()
+
+        self.extended_sasa_calculator = ExtendedSASACalculator(
+            probe_radius=self.config.sasa_probe_radius
+        )
+
+        self.extended_propka_analyzer = ExtendedPropkaAnalyzer(
+            propka_path=self.config.propka_path,
+            pH=self.config.pH
+        )
+
+    
         self.arpeggio_analyzer = ArpeggioAnalyzer(
             arpeggio_path=self.config.arpeggio_path,
             temp_dir=self.config.temp_dir
         )
     
+        self.dssp_analyzer = DSSPAnalyzer(
+            dssp_path=self.config.dssp_path
+        )
+
+        
     def _check_dependencies(self):
         """Check availability of external dependencies."""
         tool_status = self.config.check_external_tools()
@@ -318,6 +351,19 @@ class AntibodyDescriptorCalculator:
                 if self.config.verbose:
                     raise
         
+        if self.config.get('calculate_protpy', True):
+            logger.info("  Calculating ProtPy descriptors...")
+            try:
+                protpy_results = self.protpy_calculator.calculate_for_chains(
+                    heavy_sequence, light_sequence
+                )
+                results.update(self._flatten_protpy_results(protpy_results))
+            except Exception as e:
+                logger.error(f"  Error in ProtPy analysis: {e}")
+                if self.config.verbose:
+                    raise
+
+                
         # Store results
         self.results['sequence'] = results
         
@@ -327,7 +373,48 @@ class AntibodyDescriptorCalculator:
         if return_details:
             return df, results
         return df
-    
+
+    def _flatten_protpy_results(self, protpy_results: Dict) -> Dict:
+        """Flatten ProtPy results for DataFrame."""
+        flat = {}
+
+        # Select key features to avoid too many columns
+        key_features = [
+            'AAC_', 'DPC_', 'PseAAC_', 'QSO_', 'SOCN_',
+            'ConjointTriad_', 'MoreauBroto_', 'Moran_', 'Geary_'
+        ]
+
+        for key, value in protpy_results.items():
+            # Filter to keep only key features
+            for prefix in key_features:
+                if key.startswith(('Heavy_' + prefix, 'Light_' + prefix, 'Combined_' + prefix)):
+                    flat[f'ProtPy_{key}'] = value
+                    break
+
+        return flat
+
+
+    def _flatten_disulfide_results(self, disulfide_results: Dict) -> Dict:
+        """Flatten disulfide bond results."""
+        return {
+            'Free_Cysteines': disulfide_results.get('free_cys', 0),
+            'Disulfide_Bonds': disulfide_results.get('cys_bridges', 0),
+            'Total_Cysteines': disulfide_results.get('total_cys', 0)
+        }
+
+
+    def _flatten_charge_dispersion_results(self, dispersion_results: Dict) -> Dict:
+        """Flatten charge dispersion results."""
+        return {
+            'Positive_Charge_Heterogeneity': dispersion_results.get('positive_charge_heterogeneity', 0),
+            'Negative_Charge_Heterogeneity': dispersion_results.get('negative_charge_heterogeneity', 0),
+            'Charge_Asymmetry': dispersion_results.get('charge_asymmetry', 0),
+            'Positive_Charge_Clustering': dispersion_results.get('positive_charge_clustering', 0),
+            'Negative_Charge_Clustering': dispersion_results.get('negative_charge_clustering', 0),
+            'Net_Charge_Structure': dispersion_results.get('net_charge', 0)
+        }
+
+
     def calculate_structure_descriptors(
         self,
         pdb_file: Union[str, Path],
@@ -435,7 +522,42 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in charge analysis: {e}")
                 if self.config.verbose:
                     raise
-        
+
+        # Calculate disulfide bonds
+        if self.config.get('calculate_disulfides', True):
+            logger.info("  Analyzing disulfide bonds...")
+            try:
+                disulfide_results = self.disulfide_analyzer.analyze(pdb_file)
+                results.update(disulfide_results)
+            except Exception as e:
+                logger.error(f"  Error in disulfide analysis: {e}")
+                if self.config.verbose:
+                    raise
+
+        # Calculate charge dispersion
+        if self.config.get('calculate_charge_dispersion', True):
+            logger.info("  Calculating charge dispersion...")
+            try:
+                dispersion_results = self.charge_dispersion_analyzer.calculate(pdb_file)
+                results.update(dispersion_results)
+            except Exception as e:
+                logger.error(f"  Error in charge dispersion analysis: {e}")
+                if self.config.verbose:
+                    raise
+
+        # Extended SASA analysis
+        if self.config.get('calculate_extended_sasa', True):
+            logger.info("  Calculating extended SASA metrics...")
+            try:
+                extended_sasa_results = self.extended_sasa_calculator.calculate_exposed_sidechains(pdb_file)
+                results.update(extended_sasa_results)
+            except Exception as e:
+                logger.error(f"  Error in extended SASA analysis: {e}")
+                if self.config.verbose:
+                    raise
+
+
+
         # Run DSSP
         if self.config.calculate_dssp:
             logger.info("  Running DSSP analysis...")
@@ -448,16 +570,54 @@ class AntibodyDescriptorCalculator:
                     raise
         
         # Run PROPKA
+        # if self.config.calculate_propka:
+        #     logger.info("  Running PROPKA analysis...")
+        #     try:
+        #         propka_results = self.propka_analyzer.run(pdb_file)
+        #         results.update(self._flatten_propka_results(propka_results))
+        #     except Exception as e:
+        #         logger.error(f"  Error in PROPKA analysis: {e}")
+        #         if self.config.verbose:
+        #             raise
+
+        # Run Extended PROPKA
         if self.config.calculate_propka:
-            logger.info("  Running PROPKA analysis...")
+            logger.info("  Running extended PROPKA analysis...")
             try:
+                # Run standard PROPKA first
                 propka_results = self.propka_analyzer.run(pdb_file)
                 results.update(self._flatten_propka_results(propka_results))
+
+                # Get the .pka file path (assuming it's saved)
+                pka_file = Path(self.config.temp_dir) / f"{structure_id}.pka"
+                if pka_file.exists():
+                    # Extended analysis
+                    extended_propka = self.extended_propka_analyzer.parse_detailed(pka_file)
+
+                    # Add extended metrics
+                    if extended_propka['summary'] is not None:
+                        summary = extended_propka['summary'].iloc[0].to_dict()
+                        for key, value in summary.items():
+                            if key not in results:  # Don't override existing values
+                                results[f'propka_{key}'] = value
+
+                    # Add residue-level statistics
+                    if extended_propka['residues'] is not None:
+                        residues_df = extended_propka['residues']
+                        results['n_ionizable_residues'] = len(residues_df)
+                        results['mean_pKa_shift'] = residues_df.get('pKa_shift', pd.Series()).mean()
+
+                    # Add stability metrics
+                    stability = self.extended_propka_analyzer.calculate_stability_metrics(pka_file)
+                    results.update({f'stability_{k}': v for k, v in stability.items()})
+
             except Exception as e:
-                logger.error(f"  Error in PROPKA analysis: {e}")
+                logger.error(f"  Error in extended PROPKA analysis: {e}")
                 if self.config.verbose:
                     raise
-        
+
+
+
         # Run Arpeggio
         if self.config.calculate_arpeggio:
             logger.info("  Running Arpeggio analysis...")

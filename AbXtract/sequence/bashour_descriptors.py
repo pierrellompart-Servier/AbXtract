@@ -17,10 +17,10 @@ References
 .. [2] https://github.com/althonos/peptides.py
 """
 
-import peptides
 import pandas as pd
 import numpy as np
-from typing import List, Dict, Union, Optional
+from typing import Dict, List, Optional, Union
+from Bio.SeqUtils.ProtParam import ProteinAnalysis
 import logging
 
 logger = logging.getLogger(__name__)
@@ -463,3 +463,252 @@ class BashourDescriptorCalculator:
             raise ValueError(f"Unsupported format: {format}")
         
         logger.info(f"Results saved to {output_file}")
+        
+        
+        
+        
+class ExtendedBashourCalculator:
+    """
+    Extended Bashour descriptor calculator with all original metrics.
+    """
+    
+    def __init__(self):
+        """Initialize extended Bashour calculator."""
+        pass
+    
+    def calculate_all_charges(self, sequence: str) -> Dict[int, float]:
+        """
+        Calculate charge at all pH values from 1 to 14.
+        
+        Parameters
+        ----------
+        sequence : str
+            Amino acid sequence
+            
+        Returns
+        -------
+        dict
+            Dictionary mapping pH to charge
+        """
+        try:
+            analysed_seq = ProteinAnalysis(sequence)
+            charges = {}
+            
+            for pH in range(1, 15):
+                try:
+                    charge = analysed_seq.charge_at_pH(pH)
+                    charges[pH] = charge
+                except Exception:
+                    charges[pH] = 0.0
+            
+            return charges
+        except Exception as e:
+            logger.warning(f"Failed to calculate charges: {e}")
+            return {pH: 0.0 for pH in range(1, 15)}
+    
+    def calculate_hydrophobic_moment(self, sequence: str, 
+                                    window: int = 11, 
+                                    angle: int = 100) -> float:
+        """
+        Calculate hydrophobic moment.
+        
+        Parameters
+        ----------
+        sequence : str
+            Amino acid sequence
+        window : int
+            Window size for calculation
+        angle : int
+            Angle for moment calculation (100 for alpha helix, 160 for beta sheet)
+            
+        Returns
+        -------
+        float
+            Maximum hydrophobic moment
+        """
+        # Kyte-Doolittle hydrophobicity scale
+        hydrophobicity = {
+            'A': 1.8, 'C': 2.5, 'D': -3.5, 'E': -3.5, 'F': 2.8,
+            'G': -0.4, 'H': -3.2, 'I': 4.5, 'K': -3.9, 'L': 3.8,
+            'M': 1.9, 'N': -3.5, 'P': -1.6, 'Q': -3.5, 'R': -4.5,
+            'S': -0.8, 'T': -0.7, 'V': 4.2, 'W': -0.9, 'Y': -1.3
+        }
+        
+        max_moment = 0.0
+        
+        for i in range(len(sequence) - window + 1):
+            window_seq = sequence[i:i+window]
+            
+            # Calculate moment for this window
+            sum_sin = 0.0
+            sum_cos = 0.0
+            
+            for j, aa in enumerate(window_seq):
+                if aa in hydrophobicity:
+                    h = hydrophobicity[aa]
+                    angle_rad = np.deg2rad(j * angle)
+                    sum_sin += h * np.sin(angle_rad)
+                    sum_cos += h * np.cos(angle_rad)
+            
+            moment = np.sqrt(sum_sin**2 + sum_cos**2) / window
+            max_moment = max(max_moment, moment)
+        
+        return max_moment
+    
+    def calculate_percent_extinction_coefficients(self, sequence: str) -> Dict[str, float]:
+        """
+        Calculate percent molecular extinction coefficients.
+        
+        Parameters
+        ----------
+        sequence : str
+            Amino acid sequence
+            
+        Returns
+        -------
+        dict
+            Dictionary with percent extinction coefficients
+        """
+        try:
+            analysed_seq = ProteinAnalysis(sequence)
+            
+            # Get molecular weight
+            mw = analysed_seq.molecular_weight()
+            
+            # Get extinction coefficients
+            ext_reduced, ext_oxidized = analysed_seq.molar_extinction_coefficient()
+            
+            # Calculate percent extinction coefficients (per mg/ml)
+            results = {
+                'percent_mol_extcoef': (ext_reduced / mw) * 10 if mw > 0 else 0,
+                'percent_mol_extcoef_cys_bridges': (ext_oxidized / mw) * 10 if mw > 0 else 0
+            }
+            
+            return results
+        except Exception as e:
+            logger.warning(f"Failed to calculate extinction coefficients: {e}")
+            return {'percent_mol_extcoef': 0, 'percent_mol_extcoef_cys_bridges': 0}
+    
+    def calculate_extended_descriptors(self, sequence: str) -> Dict[str, float]:
+        """
+        Calculate all extended Bashour descriptors.
+        
+        Parameters
+        ----------
+        sequence : str
+            Amino acid sequence
+            
+        Returns
+        -------
+        dict
+            All extended descriptors
+        """
+        results = {}
+        
+        try:
+            analysed_seq = ProteinAnalysis(sequence)
+            
+            # Basic properties
+            results['molecular_weight'] = analysed_seq.molecular_weight()
+            results['seq_length'] = len(sequence)
+            results['average_residue_weight'] = results['molecular_weight'] / len(sequence) if len(sequence) > 0 else 0
+            
+            # Charge properties
+            charges = self.calculate_all_charges(sequence)
+            results['charges_all_pH'] = charges
+            
+            # Individual pH charges
+            for pH in range(1, 15):
+                results[f'charge_pH_{pH}'] = charges.get(pH, 0)
+            
+            # pI
+            results['pI'] = analysed_seq.isoelectric_point()
+            
+            # Extinction coefficients
+            ext_reduced, ext_oxidized = analysed_seq.molar_extinction_coefficient()
+            results['mol_extinction_coef'] = ext_reduced
+            results['mol_extinction_coef_cys_bridges'] = ext_oxidized
+            
+            # Percent extinction coefficients
+            percent_ext = self.calculate_percent_extinction_coefficients(sequence)
+            results.update(percent_ext)
+            
+            # Stability indices
+            results['instability_index'] = analysed_seq.instability_index()
+            results['aliphatic_index'] = analysed_seq.aliphatic_index()
+            results['gravy'] = analysed_seq.gravy()  # Hydrophobicity
+            
+            # Hydrophobic moment
+            results['hydrophobic_moment'] = self.calculate_hydrophobic_moment(sequence)
+            
+            # Amino acid percentages
+            aa_percent = analysed_seq.get_amino_acids_percent()
+            
+            # Content calculations
+            results['aromaticity'] = analysed_seq.aromaticity()
+            
+            # Group contents
+            tiny = ['A', 'C', 'G', 'S', 'T']
+            small = ['A', 'C', 'D', 'G', 'N', 'P', 'S', 'T', 'V']
+            aliphatic = ['A', 'I', 'L', 'V']
+            aromatic = ['F', 'W', 'Y']
+            nonpolar = ['A', 'C', 'F', 'G', 'I', 'L', 'M', 'P', 'V', 'W', 'Y']
+            polar = ['D', 'E', 'H', 'K', 'N', 'Q', 'R', 'S', 'T', 'Z']
+            charged = ['D', 'E', 'H', 'K', 'R']
+            basic = ['H', 'K', 'R']
+            acidic = ['D', 'E']
+            
+            results['tiny_content'] = sum(aa_percent.get(aa, 0) for aa in tiny)
+            results['small_content'] = sum(aa_percent.get(aa, 0) for aa in small)
+            results['aliphatic_content'] = sum(aa_percent.get(aa, 0) for aa in aliphatic)
+            results['aromatic_content'] = sum(aa_percent.get(aa, 0) for aa in aromatic)
+            results['nonpolar_content'] = sum(aa_percent.get(aa, 0) for aa in nonpolar)
+            results['polar_content'] = sum(aa_percent.get(aa, 0) for aa in polar)
+            results['charged_content'] = sum(aa_percent.get(aa, 0) for aa in charged)
+            results['basic_content'] = sum(aa_percent.get(aa, 0) for aa in basic)
+            results['acidic_content'] = sum(aa_percent.get(aa, 0) for aa in acidic)
+            
+            # Secondary structure propensities
+            helix_formers = ['A', 'E', 'L', 'M']
+            sheet_formers = ['V', 'I', 'Y', 'W', 'F']
+            turn_formers = ['G', 'N', 'P', 'S', 'D']
+            
+            results['helix_propensity'] = sum(aa_percent.get(aa, 0) for aa in helix_formers)
+            results['sheet_propensity'] = sum(aa_percent.get(aa, 0) for aa in sheet_formers)
+            results['turn_propensity'] = sum(aa_percent.get(aa, 0) for aa in turn_formers)
+            
+        except Exception as e:
+            logger.error(f"Failed to calculate extended descriptors: {e}")
+        
+        return results
+    
+    def calculate_for_dataframe(self, df: pd.DataFrame, 
+                               sequence_column: str = 'Seq') -> pd.DataFrame:
+        """
+        Calculate extended descriptors for sequences in DataFrame.
+        
+        Parameters
+        ----------
+        df : pd.DataFrame
+            DataFrame with sequences
+        sequence_column : str
+            Name of column containing sequences
+            
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with added descriptor columns
+        """
+        result_df = df.copy()
+        
+        # Calculate for each sequence
+        for idx, row in df.iterrows():
+            seq = row[sequence_column]
+            descriptors = self.calculate_extended_descriptors(seq)
+            
+            # Add to dataframe
+            for key, value in descriptors.items():
+                if key != 'charges_all_pH':  # Skip the full dict
+                    result_df.at[idx, key] = value
+        
+        return result_df
