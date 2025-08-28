@@ -461,7 +461,7 @@ class AntibodyDescriptorCalculator:
         if not pdb_file.exists():
             raise FileNotFoundError(f"PDB file not found: {pdb_file}")
         
-        validate_pdb(pdb_file)
+        # validate_pdb(pdb_file)
         
         if structure_id is None:
             structure_id = pdb_file.stem
@@ -469,8 +469,8 @@ class AntibodyDescriptorCalculator:
         logger.info(f"Calculating structure descriptors for {structure_id}")
         
         # Preprocess structure if requested
-        if preprocess:
-            pdb_file = self._preprocess_structure(pdb_file)
+        # if preprocess:
+        #     pdb_file = self._preprocess_structure(pdb_file)
         
         results = {
             'StructureID': structure_id,
@@ -584,7 +584,16 @@ class AntibodyDescriptorCalculator:
         if self.config.calculate_propka:
             logger.info("  Running extended PROPKA analysis...")
             # Run standard PROPKA first
-            propka_results = self.propka_analyzer.run(pdb_file)
+            propka_results_tuple = self.propka_analyzer.run(pdb_file)
+
+            if isinstance(propka_results_tuple, tuple):
+                propka_results, df_residues = propka_results_tuple
+            else:
+                propka_results = propka_results_tuple
+                df_residues = None
+                
+            
+
             results.update(self._flatten_propka_results(propka_results))
             # Get the .pka file path (assuming it's saved)
             pka_file = Path(self.config.temp_dir) / f"{structure_id}.pka"
@@ -632,14 +641,13 @@ class AntibodyDescriptorCalculator:
         
         # Format output
         df = pd.DataFrame([results])
-        
         # Clean up temp files if needed
         if not self.config.keep_temp_files and preprocess:
             self._cleanup_temp_files()
         
         if return_details:
-            return df, results
-        return df
+            return df, results, df_residues
+        return df, df_residues
     
     def calculate_all(
         self,
@@ -716,6 +724,17 @@ class AntibodyDescriptorCalculator:
             combined_metrics = self._calculate_combined_metrics()
             all_results.update(combined_metrics)
         
+        # post-process: handle "propty*" columns
+        for col in all_results.columns:
+            if col.startswith("propty"):
+                all_results[col] = all_results[col].apply(
+                    lambda x: float(str(x).split()[1]) if isinstance(x, str) and len(x.split()) > 1 else x
+                )
+        for col in all_results.columns:
+            if col.startswith("Peptide_propty"):
+                all_results[col] = all_results[col].apply(
+                    lambda x: float(str(x).split()[1]) if isinstance(x, str) and len(x.split()) > 1 else x
+                )
         # Store complete results
         self.results['all'] = all_results
         
@@ -960,11 +979,13 @@ class AntibodyDescriptorCalculator:
         """Flatten PROPKA results."""
         flat = {}
         if propka_results:
-            flat['Folded_pI'] = propka_results.get('folded_pI', None)
-            flat['Unfolded_pI'] = propka_results.get('unfolded_pI', None)
-            flat['Folded_charge_pH7'] = propka_results.get('folded_charge_pH7', None)
-            flat['Unfolded_charge_pH7'] = propka_results.get('unfolded_charge_pH7', None)
-            flat['Folding_energy_pH7'] = propka_results.get('folding_energy_pH7', None)
+            flat['Folded_pI'] = propka_results.get('pI_folded', None)
+            flat['Unfolded_pI'] = propka_results.get('pI_unfolded', None)
+            flat['Folded_charge_pH7'] = propka_results.get('charge_pH7_folded', None)
+            flat['Unfolded_charge_pH7'] = propka_results.get('charge_pH7_unfolded', None)
+            flat['Folding_energy_pH7'] = propka_results.get('stability_pH7', None)
+            flat['Titratable_residues'] = propka_results.get('titratable_residues', 0)
+            flat['Unusual_pKa_count'] = propka_results.get('unusual_pka_count', 0)
         return flat
     
     def _flatten_arpeggio_results(self, arpeggio_results: Dict) -> Dict:

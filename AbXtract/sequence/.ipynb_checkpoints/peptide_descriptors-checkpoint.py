@@ -173,6 +173,19 @@ class PeptideDescriptorCalculator:
             raise ValueError("At least one sequence must be provided")
         
         self.results = pd.DataFrame(results)
+        
+        # post-process: handle "propty*" columns
+        for col in self.results.columns:
+            if col.startswith("propty"):
+                self.results[col] = self.results[col].apply(
+                    lambda x: float(str(x).split()[1]) if isinstance(x, str) and len(x.split()) > 1 else x
+                )
+
+        for col in self.results.columns:
+            if col.startswith("Peptide_propty"):
+                self.results[col] = self.results[col].apply(
+                    lambda x: float(str(x).split()[1]) if isinstance(x, str) and len(x.split()) > 1 else x
+                )
         return self.results
     
     def _calculate_single_sequence(self, 
@@ -269,60 +282,140 @@ class PeptideDescriptorCalculator:
                 aa_comp[f'frequency_{aa}'] = 0
         
         return aa_comp
-    
+
     def _calculate_protpy_descriptors(self, sequence: str) -> Dict:
-        """Calculate protpy-specific descriptors."""
+        """Calculate protpy-specific descriptors with ALL features (not reduced)."""
         protpy_desc = {}
         
+        def extract_value(val):
+            """Extract scalar value from protpy output (handles Series, arrays, etc.)."""
+            try:
+                # Handle pandas Series/DataFrame
+                if hasattr(val, 'iloc'):
+                    if len(val) == 1:
+                        return float(val.iloc[0])
+                    elif len(val) > 1:
+                        # For Series with multiple values, take the first
+                        return float(val.iloc[0])
+                    else:
+                        return np.nan
+                # Handle numpy arrays
+                elif isinstance(val, np.ndarray):
+                    if val.size == 1:
+                        return float(val.item())
+                    elif val.size > 1:
+                        return float(val[0])
+                    else:
+                        return np.nan
+                # Handle lists/tuples
+                elif isinstance(val, (list, tuple)):
+                    if len(val) >= 1:
+                        return float(val[0])
+                    else:
+                        return np.nan
+                # Handle scalar values
+                else:
+                    return float(val)
+            except (ValueError, TypeError, AttributeError, IndexError):
+                return np.nan
+        
+        
         try:
-            # Amino acid composition
+            # Amino acid composition - keep all features
             aa_comp = protpy.amino_acid_composition(sequence)
             for k, v in aa_comp.items():
-                protpy_desc[f'protpy_aa_{k}'] = v
-            
-            # Dipeptide composition
+                protpy_desc[f'protpy_aa_{k}'] = extract_value(v)
+
+            # Dipeptide composition - keep all features (not just summary stats)
             dipep_comp = protpy.dipeptide_composition(sequence)
-            # Only store summary statistics to avoid too many features
-            protpy_desc['protpy_dipep_mean'] = np.mean(list(dipep_comp.values()))
-            protpy_desc['protpy_dipep_std'] = np.std(list(dipep_comp.values()))
-            protpy_desc['protpy_dipep_max'] = np.max(list(dipep_comp.values()))
-            
-            # Autocorrelation features
+            for k, v in dipep_comp.items():
+                protpy_desc[f'protpy_dipep_{k}'] = extract_value(v)
+
+            # Autocorrelation features - keep all individual features
             try:
                 moreaubroto = protpy.moreaubroto_autocorrelation(sequence)
-                protpy_desc['protpy_moreaubroto_mean'] = np.mean(list(moreaubroto.values()))
+                for k, v in moreaubroto.items():
+                    protpy_desc[f'protpy_moreaubroto_{k}'] = extract_value(v)
             except:
-                protpy_desc['protpy_moreaubroto_mean'] = np.nan
-            
+                # If it fails, we can still add NaN placeholders for expected features
+                # Moreaubroto typically has features for different properties and lags
+                for i in range(1, 31):  # Usually 30 features
+                    protpy_desc[f'protpy_moreaubroto_{i}'] = np.nan
+
             try:
                 moran = protpy.moran_autocorrelation(sequence)
-                protpy_desc['protpy_moran_mean'] = np.mean(list(moran.values()))
+                for k, v in moran.items():
+                    protpy_desc[f'protpy_moran_{k}'] = extract_value(v)
             except:
-                protpy_desc['protpy_moran_mean'] = np.nan
-            
+                # Moran typically has features for different properties and lags
+                for i in range(1, 31):  # Usually 30 features
+                    protpy_desc[f'protpy_moran_{i}'] = np.nan
+
             try:
                 geary = protpy.geary_autocorrelation(sequence)
-                protpy_desc['protpy_geary_mean'] = np.mean(list(geary.values()))
+                for k, v in geary.items():
+                    protpy_desc[f'protpy_geary_{k}'] = extract_value(v)
             except:
-                protpy_desc['protpy_geary_mean'] = np.nan
-            
-            # Conjoint triad
+                # Geary typically has features for different properties and lags
+                for i in range(1, 31):  # Usually 30 features
+                    protpy_desc[f'protpy_geary_{i}'] = np.nan
+
+            # Conjoint triad - keep all features (not just mean)
             try:
                 conjoint = protpy.conjoint_triad(sequence)
-                protpy_desc['protpy_conjoint_mean'] = np.mean(list(conjoint.values()))
+                for k, v in conjoint.items():
+                    protpy_desc[f'protpy_conjoint_{k}'] = extract_value(v)
             except:
-                protpy_desc['protpy_conjoint_mean'] = np.nan
-            
-            # Quasi-sequence order
+                # Conjoint triad typically has 343 features (7^3 combinations)
+                logger.warning(f"Failed to calculate conjoint triad for sequence")
+                # You can add placeholder features if needed
+
+            # Quasi-sequence order - keep all features (not just mean)
             try:
                 qso = protpy.quasi_sequence_order(sequence)
-                protpy_desc['protpy_qso_mean'] = np.mean(list(qso.values()))
+                for k, v in qso.items():
+                    protpy_desc[f'protpy_qso_{k}'] = extract_value(v)
             except:
-                protpy_desc['protpy_qso_mean'] = np.nan
-                
+                logger.warning(f"Failed to calculate quasi-sequence order for sequence")
+                # You can add placeholder features if needed
+
+            # Additional protpy features you might want to include:
+
+            # Tripeptide composition
+            try:
+                tripep_comp = protpy.tripeptide_composition(sequence)
+                for k, v in tripep_comp.items():
+                    protpy_desc[f'protpy_tripep_{k}'] = extract_value(v)
+            except:
+                logger.warning(f"Failed to calculate tripeptide composition for sequence")
+
+            # Composition, Transition, Distribution (CTD)
+            # try:
+            #     ctd = protpy.ctd(sequence)
+            #     for k, v in ctd.items():
+            #         protpy_desc[f'protpy_ctd_{k}'] = v
+            # except:
+            #     logger.warning(f"Failed to calculate CTD for sequence")
+
+            # Pseudo amino acid composition
+            try:
+                paac = protpy.pseudo_amino_acid_composition(sequence)
+                for k, v in paac.items():
+                    protpy_desc[f'protpy_paac_{k}'] = extract_value(v)
+            except:
+                logger.warning(f"Failed to calculate pseudo amino acid composition for sequence")
+
+            # Amphiphilic pseudo amino acid composition
+            try:
+                apaac = protpy.amphiphilic_pseudo_amino_acid_composition(sequence)
+                for k, v in apaac.items():
+                    protpy_desc[f'protpy_apaac_{k}'] = extract_value(v)
+            except:
+                logger.warning(f"Failed to calculate amphiphilic pseudo amino acid composition for sequence")
+
         except Exception as e:
             logger.warning(f"Failed to calculate protpy descriptors: {e}")
-        
+
         return protpy_desc
     
     def _safe_calc(self, func):

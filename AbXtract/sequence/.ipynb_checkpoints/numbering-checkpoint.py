@@ -279,7 +279,7 @@ class AntibodyNumbering:
         if current_cdr and current_seq:
             cdrs[current_cdr] = ''.join(current_seq)
         
-        return cdrs
+        return annotated, cdrs
     
     def get_framework_sequences(self,
                                numbered_sequence: List[Tuple[Tuple[int, str], str]],

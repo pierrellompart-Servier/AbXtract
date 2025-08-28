@@ -54,6 +54,7 @@ class PropkaAnalyzer:
         self.propka_path = propka_path
         self.pH = pH
         self.temp_dir = Path(temp_dir) if temp_dir else Path.cwd() / 'temp'
+        self.temp_dir.mkdir(parents=True, exist_ok=True)
         self.pH_range = pH_range
         self._check_propka_installation()
         
@@ -79,24 +80,7 @@ class PropkaAnalyzer:
     
     def run(self, pdb_file: Union[str, Path]) -> Dict:
         """
-        Run PROPKA analysis on PDB structure.
-        
-        Parameters
-        ----------
-        pdb_file : str or Path
-            Path to PDB file
-            
-        Returns
-        -------
-        dict
-            Dictionary containing:
-            - pI_folded: Isoelectric point of folded protein
-            - pI_unfolded: Isoelectric point of unfolded protein
-            - residue_pka: pKa values for all titratable residues
-            - charge_pH7: Net charge at pH 7
-            - stability_pH7: Folding free energy at pH 7
-            - pH_stability_profile: Stability across pH range
-            - titratable_residues: Count of titratable residues
+        Run PROPKA analysis on PDB structure with fixed command arguments.
         """
         pdb_file = Path(pdb_file)
         if not pdb_file.exists():
@@ -106,27 +90,35 @@ class PropkaAnalyzer:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
             
-            # Run PROPKA
-            pka_file = tmpdir / f"{pdb_file.stem}.pka"
+            # Run PROPKA with corrected arguments
+            # FIXED: Use correct PROPKA3 command format
+            cmd = [self.propka_path, '-q', str(pdb_file)]
             
-            try:
-                cmd = [self.propka_path, '-q', str(pdb_file), '-o', str(tmpdir / pdb_file.stem)]
-                result = subprocess.run(cmd, capture_output=True, text=True)
-                
-                if result.returncode != 0:
-                    logger.error(f"PROPKA failed: {result.stderr}")
-                    return self._empty_results()
-                
-                # Parse output
-                if not pka_file.exists():
-                    logger.error(f"PROPKA output not found: {pka_file}")
-                    return self._empty_results()
-                
-                return self._parse_pka_file(pka_file)
-                
-            except Exception as e:
-                logger.error(f"PROPKA analysis failed: {e}")
+            # Change to temp directory so output goes there
+            result = subprocess.run(
+                cmd, 
+                capture_output=True, 
+                text=True,
+                cwd=str(tmpdir)  # Run in temp directory
+            )
+            
+            if result.returncode != 0:
+                logger.error(f"PROPKA failed: {result.stderr}")
                 return self._empty_results()
+            
+            # Look for output file (PROPKA creates .pka file with same name as input)
+            pka_file = tmpdir / f"{pdb_file.stem}.pka"
+            if not pka_file.exists():
+                # Try alternative naming
+                for f in tmpdir.glob("*.pka"):
+                    pka_file = f
+                    break
+                else:
+                    logger.error(f"PROPKA output not found in {tmpdir}")
+                    return self._empty_results()
+            
+            return self._parse_pka_file(pka_file)
+
     
     def _parse_pka_file(self, pka_file: Path) -> Dict:
         """Parse PROPKA output file."""
@@ -179,49 +171,291 @@ class PropkaAnalyzer:
         results['titratable_residues'] = len(residue_pka)
         
         # Extract charge at different pH values
-        charge_data = self._extract_charge_profile(content)
+        print('_extract_charge_profile')
+        charge_data = self._extract_charge_profile(pka_file)
         results.update(charge_data)
         
         # Extract free energy profile
+        print('_extract_energy_profile')
         energy_data = self._extract_energy_profile(content)
         results.update(energy_data)
         
         # Calculate additional metrics
+        print('_calculate_stability_metrics')
         results.update(self._calculate_stability_metrics(residue_pka, desolvation_effects))
         
-        return results
-    
-    def _extract_charge_profile(self, content: str) -> Dict:
-        """Extract charge vs pH profile."""
-        charge_match = re.search(
-            r'Protein charge of folded and unfolded.*?\n\s*pH\s+unfolded\s+folded\n((?:\s*[\d.]+\s+[\d.-]+\s+[\d.-]+\n)+)',
-            content, re.DOTALL
-        )
+        print('parse_propka_file')
+        df_pdb, df_residues = self.parse_propka_file(pka_file)
+        results.update(df_pdb)
+
         
+        return results, df_residues
+    
+
+    
+    def _extract_charge_profile(self, file_path: str) -> Dict:
+        """Extract charge vs pH profile."""
+        """Extract charge vs pH profile with fixed parsing."""
         charge_data = {
             'charge_pH7_folded': 0,
             'charge_pH7_unfolded': 0,
             'charge_profile': {}
         }
+        with open(file_path, 'r') as f:
+            content = f.read()
+
+        # Look for the charge section with more flexible pattern
+        charge_section = re.search(
+            r'Protein charge of folded and unfolded state.*?\n.*?pH.*?unfolded.*?folded.*?\n(.*?)(?:\nThe pI|$)',
+            content, re.DOTALL
+        )
         
-        if charge_match:
-            for line in charge_match.group(1).strip().split('\n'):
-                parts = line.strip().split()
-                if len(parts) == 3:
-                    pH = float(parts[0])
-                    unfolded = float(parts[1])
-                    folded = float(parts[2])
+        if charge_section:
+            for line in charge_section.group(1).strip().split('\n'):
+                line = line.strip()
+                if not line or line.startswith('The pI'):
+                    break
                     
-                    charge_data['charge_profile'][pH] = {
-                        'folded': folded,
-                        'unfolded': unfolded
-                    }
-                    
-                    if abs(pH - 7.0) < 0.01:
-                        charge_data['charge_pH7_folded'] = folded
-                        charge_data['charge_pH7_unfolded'] = unfolded
+                # Parse lines with pH values
+                parts = line.split()
+                if len(parts) >= 3:
+                    try:
+                        pH = float(parts[0])
+                        unfolded = float(parts[1])
+                        folded = float(parts[2])
+                        
+                        charge_data['charge_profile'][pH] = {
+                            'folded': folded,
+                            'unfolded': unfolded
+                        }
+                        
+                        # Store pH 7 values
+                        if abs(pH - 7.0) < 0.01:
+                            charge_data['charge_pH7_folded'] = folded
+                            charge_data['charge_pH7_unfolded'] = unfolded
+                    except (ValueError, IndexError):
+                        continue
         
         return charge_data
+
+    
+
+
+    def parse_propka_file(self, file_path):
+        """
+        Parse a PROPKA .pka file and extract data into two dataframes:
+        1. df_pdb: One row per PDB file with columns for each property at each pH
+        2. df_residues: Per residue desolvation effects data
+
+        Parameters:
+        -----------
+        file_path : str or Path
+            Path to the .pka file
+
+        Returns:
+        --------
+        tuple: (df_pdb, df_residues)
+            - df_pdb: DataFrame with one row containing all pH-dependent properties
+            - df_residues: DataFrame with residue-specific desolvation effects
+        """
+        with open(file_path, 'r') as f:
+            content = f.read()
+        # Initialize the PDB data dictionary
+        pdb_data = {}
+
+        # Extract pI values (constant across all pH)
+        pi_match = re.search(r'The pI is\s+([\d.]+)\s+\(folded\)\s+and\s+([\d.]+)\s+\(unfolded\)', content)
+        pi_folded = float(pi_match.group(1)) if pi_match else None
+        pi_unfolded = float(pi_match.group(2)) if pi_match else None
+
+        # Parse Free energy data - only at specific pH points (0, 1, 2, etc.)
+        free_energy_dict = {}
+        free_energy_section = re.search(r'Free energy of\s+folding.*?\n((?:\s*[\d.]+\s+[\d.-]+\n)+)', content, re.DOTALL)
+        if free_energy_section:
+            for line in free_energy_section.group(1).strip().split('\n'):
+                parts = line.strip().split()
+                if len(parts) == 2:
+                    ph = float(parts[0])
+                    energy = float(parts[1])
+                    free_energy_dict[ph] = energy
+
+        # Parse Protein charge data - available at all 0.1 pH increments
+        charge_dict = {'folded': {}, 'unfolded': {}}
+        charge_section = re.search(r'Protein charge of folded and unfolded.*?\n\s*pH\s+unfolded\s+folded\n((?:\s*[\d.]+\s+[\d.-]+\s+[\d.-]+\n)+)', content, re.DOTALL)
+        if charge_section:
+            for line in charge_section.group(1).strip().split('\n'):
+                parts = line.strip().split()
+                if len(parts) == 3:
+                    ph = float(parts[0])
+                    unfolded = float(parts[1])
+                    folded = float(parts[2])
+                    charge_dict['unfolded'][ph] = unfolded
+                    charge_dict['folded'][ph] = folded
+
+        # Get all pH values from charge data (most complete set)
+        all_ph_values = sorted(charge_dict['folded'].keys()) if charge_dict['folded'] else []
+
+        # If no charge data, use free energy pH values
+        if not all_ph_values:
+            all_ph_values = sorted(free_energy_dict.keys())
+
+        # Build the PDB data row
+        for ph in all_ph_values:
+            # pI values (constant for all pH)
+            pdb_data[f'pI_Folded_pH_{ph:.2f}'] = pi_folded
+            pdb_data[f'pI_Unfolded_pH_{ph:.2f}'] = pi_unfolded
+
+            # Protein charge values (available for all pH)
+            pdb_data[f'Protein_Charge_Folded_pH_{ph:.2f}'] = charge_dict['folded'].get(ph, None)
+            pdb_data[f'Protein_Charge_Unfolded_pH_{ph:.2f}'] = charge_dict['unfolded'].get(ph, None)
+
+            # Free energy values (only available at integer pH values)
+            pdb_data[f'Free_Energy_kcal_mol_pH_{ph:.2f}'] = free_energy_dict.get(ph, None)
+
+        # Create PDB dataframe (one row)
+        df_pdb = pd.DataFrame([pdb_data])
+
+        # Parse Residue desolvation effects
+        residues_data = []
+
+        # Find the desolvation effects section
+        desolv_section = re.search(
+            r'DESOLVATION\s+EFFECTS.*?\n\s*RESIDUE\s+pKa\s+BURIED\s+REGULAR\s+RE.*?\n-+\n(.*?)(?:\n-+|\nSUMMARY)',
+            content, re.DOTALL
+        )
+
+        if desolv_section:
+            lines = desolv_section.group(1).strip().split('\n')
+
+            current_residue = None
+            for line in lines:
+                if not line.strip():
+                    continue
+
+                # Enhanced pattern to handle various formats
+                # Match lines like: ASP  54 H   2.55     0 %    0.35  197   0.00    0
+                match = re.match(r'^([A-Z+-]+)\s+(\d+)\s+([A-Z])\s+([\d.]+)\s+(\d+)\s*%\s+([\d.]+)\s+(\d+)', line)
+                if match:
+                    res_type = match.group(1)
+                    res_num = int(match.group(2))
+                    chain = match.group(3)
+                    pka = float(match.group(4))
+                    buried_pct = int(match.group(5))
+                    buried = f"{buried_pct} %"
+                    regular = float(match.group(6))
+                    re_value = int(match.group(7))
+
+                    # Check if we already have this residue (avoid duplicates from continuation lines)
+                    exists = False
+                    for existing_res in residues_data:
+                        if (existing_res['Residue_Type'] == res_type and 
+                            existing_res['Residue_Number'] == res_num and 
+                            existing_res['Chain'] == chain):
+                            exists = True
+                            break
+
+                    if not exists:
+                        residue_entry = {
+                            'Residue_Type': res_type,
+                            'Residue_Number': res_num,
+                            'Chain': chain,
+                            'pKa': pka,
+                            'BURIED': buried,
+                            'REGULAR': regular,
+                            'RE': re_value
+                        }
+                        residues_data.append(residue_entry)
+
+        # If desolvation parsing didn't work or is incomplete, try the summary section
+        summary_section = re.search(r'SUMMARY OF THIS PREDICTION\s*\n.*?Group\s+pKa\s+model-pKa.*?\n(.*?)(?:\n-+|\Z)', 
+                                    content, re.DOTALL)
+
+        if summary_section:
+            existing_residues = set((r['Residue_Type'], r['Residue_Number'], r['Chain']) 
+                                   for r in residues_data)
+
+            for line in summary_section.group(1).strip().split('\n'):
+                match = re.match(r'\s*([A-Z+-]+)\s+(\d+)\s+([A-Z])\s+([\d.]+)\s+([\d.]+)', line)
+                if match:
+                    res_type = match.group(1)
+                    res_num = int(match.group(2))
+                    chain = match.group(3)
+                    pka = float(match.group(4))
+
+                    # Only add if not already in the list
+                    if (res_type, res_num, chain) not in existing_residues:
+                        # These residues don't have desolvation data
+                        residue_entry = {
+                            'Residue_Type': res_type,
+                            'Residue_Number': res_num,
+                            'Chain': chain,
+                            'pKa': pka,
+                            'BURIED': None,
+                            'REGULAR': None,
+                            'RE': None
+                        }
+                        residues_data.append(residue_entry)
+
+        # Create residue dataframe
+        df_residues = pd.DataFrame(residues_data) if residues_data else pd.DataFrame()
+
+        # Sort residues by residue number
+        if not df_residues.empty:
+            df_residues = df_residues.sort_values('Residue_Number').reset_index(drop=True)
+
+            
+
+        rows = []
+
+        with open(file_path, "r") as f_in:
+            keep_mode = False
+            for r in f_in:
+                r_stripped = r.strip()
+                if r_stripped.startswith("RESIDUE"):
+                    keep_mode = True
+                    continue
+                if r_stripped.startswith("SUMMARY"):
+                    keep_mode = False
+                    continue
+
+                if keep_mode and "%" in r:
+                    line_split = r.split()
+                    rows.append([
+                        line_split[0],   # Residue_Type
+                        line_split[1],   # Residue_Number
+                        line_split[2],   # Chain
+                        line_split[4],   # Buried ratio
+                        line_split[6],   # Disolvation regular Cst
+                        line_split[7],   # Disolvation regular Nb
+                        line_split[8],   # Effects RE Cst
+                        line_split[9],   # Effects RE Nb
+                    ])
+
+        df_res_comp = pd.DataFrame(
+            rows,
+            columns=[
+                "Residue_Type",
+                "Residue_Number",
+                "Chain",
+                "Buried ratio",
+                "Disolvation regular Cst",
+                "Disolvation regular Nb",
+                "Effects RE Cst",
+                "Effects RE Nb",
+            ]
+        )
+
+
+        for col in df_res_comp.columns.tolist()[3:]:
+            df_residues[col] = df_res_comp[col]
+
+        df_residues_ka = df_residues.drop( ["BURIED", "REGULAR", "RE"], axis =1) 
+
+
+
+        return df_pdb, df_residues_ka
+
+    
     
     def _extract_energy_profile(self, content: str) -> Dict:
         """Extract folding free energy vs pH profile."""

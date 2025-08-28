@@ -25,6 +25,12 @@ import logging
 import peptides
 logger = logging.getLogger(__name__)
 
+import pandas as pd
+import numpy as np
+from typing import Dict, List, Optional, Union
+from Bio.SeqUtils.ProtParam import ProteinAnalysis
+import logging
+import peptides
 
 class BashourDescriptorCalculator:
     """
@@ -45,6 +51,9 @@ class BashourDescriptorCalculator:
     >>> print(results['Molecular Weight'].values)
     """
     
+
+
+
     def __init__(self):
         """Initialize the calculator."""
         self.results = None
@@ -92,48 +101,45 @@ class BashourDescriptorCalculator:
                 'description': 'Amphiphilicity measure',
                 'units': None,
                 'category': 'Hydrophobicity'
-            },
-            'Aromatic content': {
-                'description': 'Percentage of aromatic amino acids (F,H,W,Y)',
-                'units': '%',
-                'category': 'Composition'
-            },
-            'Tiny content': {
-                'description': 'Percentage of tiny amino acids (A,C,G,S,T)',
-                'units': '%',
-                'category': 'Composition'
-            },
-            'Small content': {
-                'description': 'Percentage of small amino acids (A,C,D,G,N,P,S,T,V)',
-                'units': '%',
-                'category': 'Composition'
-            },
-            'Aliphatic content': {
-                'description': 'Percentage of aliphatic amino acids (A,I,L,V)',
-                'units': '%',
-                'category': 'Composition'
-            },
-            'Nonpolar content': {
-                'description': 'Percentage of nonpolar amino acids',
-                'units': '%',
-                'category': 'Composition'
-            },
-            'Polar content': {
-                'description': 'Percentage of polar amino acids',
-                'units': '%',
-                'category': 'Composition'
-            },
-            'Basic content': {
-                'description': 'Percentage of basic amino acids (H,K,R)',
-                'units': '%',
-                'category': 'Composition'
-            },
-            'Acidic content': {
-                'description': 'Percentage of acidic amino acids (D,E)',
-                'units': '%',
-                'category': 'Composition'
             }
         }
+    
+    def _validate_sequence(self, seq: str) -> str:
+        """
+        Validate and clean sequence.
+        
+        Parameters
+        ----------
+        seq : str
+            Input sequence
+            
+        Returns
+        -------
+        str
+            Cleaned sequence
+            
+        Raises
+        ------
+        ValueError
+            If sequence is invalid
+        """
+        if not seq or len(seq) == 0:
+            raise ValueError("Empty sequence provided")
+        
+        # Convert to uppercase and remove whitespace
+        seq = seq.upper().strip()
+        
+        # Remove any non-amino acid characters
+        valid_aa = set('ACDEFGHIKLMNPQRSTVWY')
+        cleaned_seq = ''.join([aa for aa in seq if aa in valid_aa])
+        
+        if len(cleaned_seq) == 0:
+            raise ValueError("No valid amino acids found in sequence")
+        
+        if len(cleaned_seq) < 3:
+            logger.warning(f"Very short sequence: {cleaned_seq}")
+        
+        return cleaned_seq
     
     def calculate(self, 
                   sequences: Union[List[str], Dict[str, str], str],
@@ -146,10 +152,7 @@ class BashourDescriptorCalculator:
         Parameters
         ----------
         sequences : list, dict, or str
-            Sequences to analyze. Can be:
-            - List of sequences
-            - Dictionary of {name: sequence}
-            - Single sequence string
+            Sequences to analyze
         dataset_name : str
             Name for the dataset
         calculate_charge_profile : bool
@@ -201,237 +204,404 @@ class BashourDescriptorCalculator:
     
     def _calculate_size_descriptors(self, df: pd.DataFrame):
         """Calculate size-related descriptors."""
-        df['Molecular Weight'] = df['Seq'].apply(self._get_mw)
+        df['Molecular Weight'] = df['Seq'].apply(self._get_mw_safe)
         df['Seq Length'] = df['Seq'].apply(len)
-        df['Average Residue Weight'] = df['Seq'].apply(self._get_avresweight)
+        df['Average Residue Weight'] = df.apply(
+            lambda row: row['Molecular Weight'] / row['Seq Length'] 
+            if row['Seq Length'] > 0 and pd.notna(row['Molecular Weight'])
+            else np.nan, axis=1
+        )
     
     def _calculate_charge_descriptors(self, df: pd.DataFrame,
                                      calculate_profile: bool,
                                      pH_range: tuple):
         """Calculate charge-related descriptors."""
-        df['pI'] = df['Seq'].apply(self._get_pI)
+        df['pI'] = df['Seq'].apply(self._get_pI_safe)
         
         if calculate_profile:
             df['Charges (all pH values)'] = df['Seq'].apply(
-                lambda x: self._get_all_charges(x, pH_range)
+                lambda x: self._get_all_charges_safe(x, pH_range)
             )
             
             # Expand charge columns for individual pH values
             for pH in range(pH_range[0], pH_range[1] + 1):
                 df[f'Charge_pH_{pH}'] = df['Charges (all pH values)'].apply(
-                    lambda x: x.get(pH, np.nan)
+                    lambda x: x.get(pH, np.nan) if isinstance(x, dict) else np.nan
                 )
     
     def _calculate_photochemical_descriptors(self, df: pd.DataFrame):
         """Calculate photochemical descriptors."""
         df['Molecular Extinction Coefficient'] = df['Seq'].apply(
-            self._get_mol_extcoef
+            self._get_mol_extcoef_safe
         )
         df['Molecular Extinction Coefficient (Cysteine bridges)'] = df['Seq'].apply(
-            self._get_mol_extcoef_cysteine_bridges
+            self._get_mol_extcoef_cysteine_bridges_safe
         )
-        df['% Molecular Extinction Coefficient'] = df['Seq'].apply(
-            self._get_percent_mol_extcoef
+        df['% Molecular Extinction Coefficient'] = df.apply(
+            lambda row: (row['Molecular Extinction Coefficient'] * 10) / row['Molecular Weight'] 
+            if pd.notna(row['Molecular Extinction Coefficient']) and pd.notna(row['Molecular Weight']) and row['Molecular Weight'] > 0
+            else np.nan, axis=1
         )
-        df['% Molecular Extinction Coefficient (Cysteine bridges)'] = df['Seq'].apply(
-            self._get_percent_mol_extcoef_cysteine_bridges
+        df['% Molecular Extinction Coefficient (Cysteine bridges)'] = df.apply(
+            lambda row: (row['Molecular Extinction Coefficient (Cysteine bridges)'] * 10) / row['Molecular Weight'] 
+            if pd.notna(row['Molecular Extinction Coefficient (Cysteine bridges)']) and pd.notna(row['Molecular Weight']) and row['Molecular Weight'] > 0
+            else np.nan, axis=1
         )
     
     def _calculate_stability_descriptors(self, df: pd.DataFrame):
         """Calculate stability-related descriptors."""
-        df['Instability Index'] = df['Seq'].apply(self._get_instaindex)
-        df['Aliphatic Index'] = df['Seq'].apply(self._get_aliphindex)
+        df['Instability Index'] = df['Seq'].apply(self._get_instaindex_safe)
+        df['Aliphatic Index'] = df['Seq'].apply(self._get_aliphindex_safe)
     
     def _calculate_hydrophobicity_descriptors(self, df: pd.DataFrame):
         """Calculate hydrophobicity-related descriptors."""
-        df['Hydrophobicity'] = df['Seq'].apply(self._get_hydrophobicity)
-        df['Hydrophobic moment'] = df['Seq'].apply(self._get_hmom)
+        df['Hydrophobicity'] = df['Seq'].apply(self._get_hydrophobicity_safe)
+        df['Hydrophobic moment'] = df['Seq'].apply(self._get_hmom_safe)
     
     def _calculate_composition_descriptors(self, df: pd.DataFrame):
         """Calculate amino acid composition descriptors."""
-        df['Aromatic content'] = df['Seq'].apply(self._get_aromaticity)
-        df['Tiny content'] = df['Seq'].apply(self._get_tiny)
-        df['Small content'] = df['Seq'].apply(self._get_small)
-        df['Aliphatic content'] = df['Seq'].apply(self._get_aliphatic)
-        df['Nonpolar content'] = df['Seq'].apply(self._get_nonpolar)
-        df['Polar content'] = df['Seq'].apply(self._get_polar)
-        df['Basic content'] = df['Seq'].apply(self._get_basic)
-        df['Acidic content'] = df['Seq'].apply(self._get_acidic)
+        df['Aromatic content'] = df['Seq'].apply(self._get_aromaticity_safe)
+        df['Tiny content'] = df['Seq'].apply(self._get_tiny_safe)
+        df['Small content'] = df['Seq'].apply(self._get_small_safe)
+        df['Aliphatic content'] = df['Seq'].apply(self._get_aliphatic_safe)
+        df['Nonpolar content'] = df['Seq'].apply(self._get_nonpolar_safe)
+        df['Polar content'] = df['Seq'].apply(self._get_polar_safe)
+        df['Basic content'] = df['Seq'].apply(self._get_basic_safe)
+        df['Acidic content'] = df['Seq'].apply(self._get_acidic_safe)
     
-    # Individual descriptor calculation methods
-    def _get_mw(self, seq: str) -> float:
-        """Calculate molecular weight."""
-        pep = peptides.Peptide(seq)
-        return pep.molecular_weight()
-    
-    def _get_avresweight(self, seq: str) -> float:
-        """Calculate average residue weight."""
-        pep = peptides.Peptide(seq)
-        return pep.molecular_weight() / len(seq) if len(seq) > 0 else 0
-    
-    def _get_all_charges(self, seq: str, pH_range: tuple) -> Dict[int, float]:
-        """Calculate charge at all pH values."""
-        all_charges = {}
-        pep = peptides.Peptide(seq)
-        
-        for pH in range(pH_range[0], pH_range[1] + 1):
-            try:
-                charge = pep.charge(pH=pH, pKscale='Lehninger')
-                all_charges[pH] = charge
-            except:
-                all_charges[pH] = np.nan
-        
-        return all_charges
-    
-    def _get_pI(self, seq: str) -> float:
-        """Calculate isoelectric point."""
+    # Safe calculation methods with better error handling
+    def _get_mw_safe(self, seq: str) -> float:
+        """Calculate molecular weight safely."""
         try:
-            pep = peptides.Peptide(seq)
-            return pep.isoelectric_point(pKscale="Lehninger")
-        except:
-            return np.nan
-    
-    def _get_mol_extcoef(self, seq: str) -> float:
-        """Calculate molecular extinction coefficient."""
-        # Count aromatic residues
-        n_tyr = seq.count('Y')
-        n_trp = seq.count('W')
-        n_cys = seq.count('C')
-        
-        # Calculate with reduced cysteines
-        if n_cys % 2 == 0:
-            return (n_tyr * 1490) + (n_trp * 5500) + ((n_cys // 2) * 125)
-        else:
-            return (n_tyr * 1490) + (n_trp * 5500) + (((n_cys - 1) // 2) * 125)
-    
-    def _get_mol_extcoef_cysteine_bridges(self, seq: str) -> float:
-        """Calculate extinction coefficient from cysteine bridges only."""
-        n_cys = seq.count('C')
-        if n_cys % 2 == 0:
-            return (n_cys // 2) * 125
-        else:
-            return ((n_cys - 1) // 2) * 125
-    
-    def _get_percent_mol_extcoef(self, seq: str) -> float:
-        """Calculate percent molecular extinction coefficient."""
-        mol_extcoef = self._get_mol_extcoef(seq)
-        mw = self._get_mw(seq)
-        return (mol_extcoef * 10) / mw if mw > 0 else 0
-    
-    def _get_percent_mol_extcoef_cysteine_bridges(self, seq: str) -> float:
-        """Calculate percent extinction coefficient from cysteine bridges."""
-        mol_extcoef_cys = self._get_mol_extcoef_cysteine_bridges(seq)
-        mw = self._get_mw(seq)
-        return (mol_extcoef_cys * 10) / mw if mw > 0 else 0
-    
-    def _get_instaindex(self, seq: str) -> float:
-        """Calculate instability index."""
-        if len(seq) < 3:
-            return np.nan
-        try:
-            pep = peptides.Peptide(seq)
-            return pep.instability_index()
-        except:
-            return np.nan
-    
-    def _get_aliphindex(self, seq: str) -> float:
-        """Calculate aliphatic index."""
-        try:
-            pep = peptides.Peptide(seq)
-            return pep.aliphatic_index()
-        except:
-            return np.nan
-    
-    def _get_hydrophobicity(self, seq: str) -> float:
-        """Calculate hydrophobicity (GRAVY)."""
-        try:
-            pep = peptides.Peptide(seq)
-            return pep.hydrophobicity(scale='Eisenberg')
-        except:
-            return np.nan
-    
-    def _get_hmom(self, seq: str) -> float:
-        """Calculate hydrophobic moment."""
-        try:
-            pep = peptides.Peptide(seq)
-            return pep.hydrophobic_moment(angle=160, window=10)
-        except:
-            return np.nan
-    
-    def _get_aromaticity(self, seq: str) -> float:
-        """Calculate aromatic content (F,H,W,Y)."""
-        if len(seq) == 0:
-            return 0
-        return ((seq.count('F') + seq.count('H') + 
-                seq.count('W') + seq.count('Y')) / len(seq)) * 100
-    
-    def _get_tiny(self, seq: str) -> float:
-        """Calculate tiny amino acid content (A,C,G,S,T)."""
-        if len(seq) == 0:
-            return 0
-        return ((seq.count('A') + seq.count('C') + seq.count('G') +
-                seq.count('S') + seq.count('T')) / len(seq)) * 100
-    
-    def _get_small(self, seq: str) -> float:
-        """Calculate small amino acid content (A,C,D,G,N,P,S,T,V)."""
-        if len(seq) == 0:
-            return 0
-        return ((seq.count('A') + seq.count('C') + seq.count('D') +
-                seq.count('G') + seq.count('N') + seq.count('P') +
-                seq.count('S') + seq.count('T') + seq.count('V')) / len(seq)) * 100
-    
-    def _get_aliphatic(self, seq: str) -> float:
-        """Calculate aliphatic content (A,I,L,V)."""
-        if len(seq) == 0:
-            return 0
-        return ((seq.count('A') + seq.count('I') + 
-                seq.count('L') + seq.count('V')) / len(seq)) * 100
-    
-    def _get_nonpolar(self, seq: str) -> float:
-        """Calculate nonpolar content (A,C,F,G,I,L,M,P,V,W,Y)."""
-        if len(seq) == 0:
-            return 0
-        return ((seq.count('A') + seq.count('C') + seq.count('F') +
-                seq.count('G') + seq.count('I') + seq.count('L') +
-                seq.count('M') + seq.count('P') + seq.count('V') +
-                seq.count('W') + seq.count('Y')) / len(seq)) * 100
-    
-    def _get_polar(self, seq: str) -> float:
-        """Calculate polar content (D,E,H,K,N,Q,R,S,T)."""
-        if len(seq) == 0:
-            return 0
-        return ((seq.count('D') + seq.count('E') + seq.count('H') +
-                seq.count('K') + seq.count('N') + seq.count('Q') +
-                seq.count('R') + seq.count('S') + seq.count('T')) / len(seq)) * 100
-    
-    def _get_basic(self, seq: str) -> float:
-        """Calculate basic content (H,K,R)."""
-        if len(seq) == 0:
-            return 0
-        return ((seq.count('H') + seq.count('K') + 
-                seq.count('R')) / len(seq)) * 100
-    
-    def _get_acidic(self, seq: str) -> float:
-        """Calculate acidic content (D,E)."""
-        if len(seq) == 0:
-            return 0
-        return ((seq.count('D') + seq.count('E')) / len(seq)) * 100
-    
-    def get_descriptor_info(self, descriptor_name: str) -> Dict:
-        """
-        Get information about a specific descriptor.
-        
-        Parameters
-        ----------
-        descriptor_name : str
-            Name of the descriptor
+            cleaned_seq = self._validate_sequence(seq)
             
-        Returns
-        -------
-        dict
-            Information about the descriptor
-        """
-        return self.descriptor_info.get(descriptor_name, {})
+            # Try with peptides library first
+            try:
+                pep = peptides.Peptide(cleaned_seq)
+                return pep.molecular_weight()
+            except Exception as e:
+                logger.warning(f"peptides.Peptide failed for MW: {e}")
+                
+                # Fallback to BioPython
+                try:
+                    analysis = ProteinAnalysis(cleaned_seq)
+                    return analysis.molecular_weight()
+                except Exception as e2:
+                    logger.warning(f"ProteinAnalysis failed for MW: {e2}")
+                    
+                    # Manual calculation as last resort
+                    return self._calculate_mw_manual(cleaned_seq)
+                    
+        except Exception as e:
+            logger.error(f"All MW calculations failed: {e}")
+            return np.nan
+    
+    def _calculate_mw_manual(self, seq: str) -> float:
+        """Manual molecular weight calculation."""
+        # Average amino acid molecular weights (approximate)
+        aa_weights = {
+            'A': 89.09, 'R': 174.20, 'N': 132.12, 'D': 133.10, 'C': 121.15,
+            'E': 147.13, 'Q': 146.15, 'G': 75.07, 'H': 155.16, 'I': 131.17,
+            'L': 131.17, 'K': 146.19, 'M': 149.21, 'F': 165.19, 'P': 115.13,
+            'S': 105.09, 'T': 119.12, 'W': 204.23, 'Y': 181.19, 'V': 117.15
+        }
+        
+        total_weight = 0
+        for aa in seq:
+            if aa in aa_weights:
+                total_weight += aa_weights[aa]
+        
+        # Subtract water for peptide bonds
+        if len(seq) > 1:
+            total_weight -= (len(seq) - 1) * 18.015
+        
+        return total_weight
+    
+    def _get_pI_safe(self, seq: str) -> float:
+        """Calculate isoelectric point safely."""
+        try:
+            cleaned_seq = self._validate_sequence(seq)
+            
+            # Try with peptides library first
+            try:
+                pep = peptides.Peptide(cleaned_seq)
+                return pep.isoelectric_point(pKscale="Lehninger")
+            except Exception as e:
+                logger.warning(f"peptides.Peptide failed for pI: {e}")
+                
+                # Fallback to BioPython
+                try:
+                    analysis = ProteinAnalysis(cleaned_seq)
+                    return analysis.isoelectric_point()
+                except Exception as e2:
+                    logger.warning(f"ProteinAnalysis failed for pI: {e2}")
+                    return np.nan
+                    
+        except Exception as e:
+            logger.error(f"All pI calculations failed: {e}")
+            return np.nan
+    
+    def _get_all_charges_safe(self, seq: str, pH_range: tuple) -> Dict[int, float]:
+        """Calculate charge at all pH values safely."""
+        try:
+            cleaned_seq = self._validate_sequence(seq)
+            all_charges = {}
+            
+            # Try with peptides library first
+            try:
+                pep = peptides.Peptide(cleaned_seq)
+                for pH in range(pH_range[0], pH_range[1] + 1):
+                    try:
+                        charge = pep.charge(pH=pH, pKscale='Lehninger')
+                        all_charges[pH] = charge
+                    except:
+                        all_charges[pH] = np.nan
+                return all_charges
+            except Exception as e:
+                logger.warning(f"peptides.Peptide failed for charges: {e}")
+                
+                # Fallback to BioPython
+                try:
+                    analysis = ProteinAnalysis(cleaned_seq)
+                    for pH in range(pH_range[0], pH_range[1] + 1):
+                        try:
+                            charge = analysis.charge_at_pH(pH)
+                            all_charges[pH] = charge
+                        except:
+                            all_charges[pH] = np.nan
+                    return all_charges
+                except Exception as e2:
+                    logger.warning(f"ProteinAnalysis failed for charges: {e2}")
+                    return {pH: np.nan for pH in range(pH_range[0], pH_range[1] + 1)}
+                    
+        except Exception as e:
+            logger.error(f"All charge calculations failed: {e}")
+            return {pH: np.nan for pH in range(pH_range[0], pH_range[1] + 1)}
+    
+    def _get_mol_extcoef_safe(self, seq: str) -> float:
+        """Calculate molecular extinction coefficient safely."""
+        try:
+            cleaned_seq = self._validate_sequence(seq)
+            
+            # Count aromatic residues manually (most reliable)
+            n_tyr = cleaned_seq.count('Y')
+            n_trp = cleaned_seq.count('W')
+            n_cys = cleaned_seq.count('C')
+            
+            # Calculate with reduced cysteines
+            if n_cys % 2 == 0:
+                return (n_tyr * 1490) + (n_trp * 5500) + ((n_cys // 2) * 125)
+            else:
+                return (n_tyr * 1490) + (n_trp * 5500) + (((n_cys - 1) // 2) * 125)
+                
+        except Exception as e:
+            logger.error(f"Extinction coefficient calculation failed: {e}")
+            return np.nan
+    
+    def _get_mol_extcoef_cysteine_bridges_safe(self, seq: str) -> float:
+        """Calculate extinction coefficient from cysteine bridges safely."""
+        try:
+            cleaned_seq = self._validate_sequence(seq)
+            n_cys = cleaned_seq.count('C')
+            
+            if n_cys % 2 == 0:
+                return (n_cys // 2) * 125
+            else:
+                return ((n_cys - 1) // 2) * 125
+                
+        except Exception as e:
+            logger.error(f"Cysteine extinction coefficient calculation failed: {e}")
+            return np.nan
+    
+    def _get_instaindex_safe(self, seq: str) -> float:
+        """Calculate instability index safely."""
+        try:
+            cleaned_seq = self._validate_sequence(seq)
+            
+            if len(cleaned_seq) < 3:
+                return np.nan
+            
+            # Try with peptides library first
+            try:
+                pep = peptides.Peptide(cleaned_seq)
+                return pep.instability_index()
+            except Exception as e:
+                logger.warning(f"peptides.Peptide failed for instability: {e}")
+                
+                # Fallback to BioPython
+                try:
+                    analysis = ProteinAnalysis(cleaned_seq)
+                    return analysis.instability_index()
+                except Exception as e2:
+                    logger.warning(f"ProteinAnalysis failed for instability: {e2}")
+                    return np.nan
+                    
+        except Exception as e:
+            logger.error(f"Instability index calculation failed: {e}")
+            return np.nan
+    
+    def _get_aliphindex_safe(self, seq: str) -> float:
+        """Calculate aliphatic index safely."""
+        try:
+            cleaned_seq = self._validate_sequence(seq)
+            
+            # Try with peptides library first
+            try:
+                pep = peptides.Peptide(cleaned_seq)
+                return pep.aliphatic_index()
+            except Exception as e:
+                logger.warning(f"peptides.Peptide failed for aliphatic index: {e}")
+                
+                # Fallback to BioPython
+                try:
+                    analysis = ProteinAnalysis(cleaned_seq)
+                    return analysis.aliphatic_index()
+                except Exception as e2:
+                    logger.warning(f"ProteinAnalysis failed for aliphatic index: {e2}")
+                    return np.nan
+                    
+        except Exception as e:
+            logger.error(f"Aliphatic index calculation failed: {e}")
+            return np.nan
+    
+    def _get_hydrophobicity_safe(self, seq: str) -> float:
+        """Calculate hydrophobicity (GRAVY) safely."""
+        try:
+            cleaned_seq = self._validate_sequence(seq)
+            
+            # Try with peptides library first (using GRAVY scale)
+            try:
+                pep = peptides.Peptide(cleaned_seq)
+                return pep.hydrophobicity(scale='KyteDoolittle')  # This is GRAVY
+            except Exception as e:
+                logger.warning(f"peptides.Peptide failed for hydrophobicity: {e}")
+                
+                # Fallback to BioPython
+                try:
+                    analysis = ProteinAnalysis(cleaned_seq)
+                    return analysis.gravy()
+                except Exception as e2:
+                    logger.warning(f"ProteinAnalysis failed for hydrophobicity: {e2}")
+                    return np.nan
+                    
+        except Exception as e:
+            logger.error(f"Hydrophobicity calculation failed: {e}")
+            return np.nan
+    
+    def _get_hmom_safe(self, seq: str) -> float:
+        """Calculate hydrophobic moment safely."""
+        try:
+            cleaned_seq = self._validate_sequence(seq)
+            
+            try:
+                pep = peptides.Peptide(cleaned_seq)
+                return pep.hydrophobic_moment(angle=160, window=10)
+            except Exception as e:
+                logger.warning(f"Hydrophobic moment calculation failed: {e}")
+                return np.nan
+                
+        except Exception as e:
+            logger.error(f"Hydrophobic moment calculation failed: {e}")
+            return np.nan
+    
+    def _get_aromaticity_safe(self, seq: str) -> float:
+        """Calculate aromatic content safely."""
+        try:
+            cleaned_seq = self._validate_sequence(seq)
+            if len(cleaned_seq) == 0:
+                return 0
+            return ((cleaned_seq.count('F') + cleaned_seq.count('H') + 
+                    cleaned_seq.count('W') + cleaned_seq.count('Y')) / len(cleaned_seq)) * 100
+        except Exception as e:
+            logger.error(f"Aromaticity calculation failed: {e}")
+            return np.nan
+    
+    def _get_tiny_safe(self, seq: str) -> float:
+        """Calculate tiny amino acid content safely."""
+        try:
+            cleaned_seq = self._validate_sequence(seq)
+            if len(cleaned_seq) == 0:
+                return 0
+            return ((cleaned_seq.count('A') + cleaned_seq.count('C') + cleaned_seq.count('G') +
+                    cleaned_seq.count('S') + cleaned_seq.count('T')) / len(cleaned_seq)) * 100
+        except Exception as e:
+            logger.error(f"Tiny content calculation failed: {e}")
+            return np.nan
+    
+    def _get_small_safe(self, seq: str) -> float:
+        """Calculate small amino acid content safely."""
+        try:
+            cleaned_seq = self._validate_sequence(seq)
+            if len(cleaned_seq) == 0:
+                return 0
+            return ((cleaned_seq.count('A') + cleaned_seq.count('C') + cleaned_seq.count('D') +
+                    cleaned_seq.count('G') + cleaned_seq.count('N') + cleaned_seq.count('P') +
+                    cleaned_seq.count('S') + cleaned_seq.count('T') + cleaned_seq.count('V')) / len(cleaned_seq)) * 100
+        except Exception as e:
+            logger.error(f"Small content calculation failed: {e}")
+            return np.nan
+    
+    def _get_aliphatic_safe(self, seq: str) -> float:
+        """Calculate aliphatic content safely."""
+        try:
+            cleaned_seq = self._validate_sequence(seq)
+            if len(cleaned_seq) == 0:
+                return 0
+            return ((cleaned_seq.count('A') + cleaned_seq.count('I') + 
+                    cleaned_seq.count('L') + cleaned_seq.count('V')) / len(cleaned_seq)) * 100
+        except Exception as e:
+            logger.error(f"Aliphatic content calculation failed: {e}")
+            return np.nan
+    
+    def _get_nonpolar_safe(self, seq: str) -> float:
+        """Calculate nonpolar content safely."""
+        try:
+            cleaned_seq = self._validate_sequence(seq)
+            if len(cleaned_seq) == 0:
+                return 0
+            return ((cleaned_seq.count('A') + cleaned_seq.count('C') + cleaned_seq.count('F') +
+                    cleaned_seq.count('G') + cleaned_seq.count('I') + cleaned_seq.count('L') +
+                    cleaned_seq.count('M') + cleaned_seq.count('P') + cleaned_seq.count('V') +
+                    cleaned_seq.count('W') + cleaned_seq.count('Y')) / len(cleaned_seq)) * 100
+        except Exception as e:
+            logger.error(f"Nonpolar content calculation failed: {e}")
+            return np.nan
+    
+    def _get_polar_safe(self, seq: str) -> float:
+        """Calculate polar content safely."""
+        try:
+            cleaned_seq = self._validate_sequence(seq)
+            if len(cleaned_seq) == 0:
+                return 0
+            return ((cleaned_seq.count('D') + cleaned_seq.count('E') + cleaned_seq.count('H') +
+                    cleaned_seq.count('K') + cleaned_seq.count('N') + cleaned_seq.count('Q') +
+                    cleaned_seq.count('R') + cleaned_seq.count('S') + cleaned_seq.count('T')) / len(cleaned_seq)) * 100
+        except Exception as e:
+            logger.error(f"Polar content calculation failed: {e}")
+            return np.nan
+    
+    def _get_basic_safe(self, seq: str) -> float:
+        """Calculate basic content safely."""
+        try:
+            cleaned_seq = self._validate_sequence(seq)
+            if len(cleaned_seq) == 0:
+                return 0
+            return ((cleaned_seq.count('H') + cleaned_seq.count('K') + 
+                    cleaned_seq.count('R')) / len(cleaned_seq)) * 100
+        except Exception as e:
+            logger.error(f"Basic content calculation failed: {e}")
+            return np.nan
+    
+    def _get_acidic_safe(self, seq: str) -> float:
+        """Calculate acidic content safely."""
+        try:
+            cleaned_seq = self._validate_sequence(seq)
+            if len(cleaned_seq) == 0:
+                return 0
+            return ((cleaned_seq.count('D') + cleaned_seq.count('E')) / len(cleaned_seq)) * 100
+        except Exception as e:
+            logger.error(f"Acidic content calculation failed: {e}")
+            return np.nan
     
     def to_dataframe(self) -> pd.DataFrame:
         """Return results as DataFrame."""
@@ -440,16 +610,7 @@ class BashourDescriptorCalculator:
         return self.results
     
     def save_results(self, output_file: str, format: str = "csv"):
-        """
-        Save results to file.
-        
-        Parameters
-        ----------
-        output_file : str
-            Output file path
-        format : str
-            Output format ('csv', 'json', 'excel')
-        """
+        """Save results to file."""
         if self.results is None:
             raise ValueError("No results to save. Run calculate() first.")
         
@@ -463,7 +624,6 @@ class BashourDescriptorCalculator:
             raise ValueError(f"Unsupported format: {format}")
         
         logger.info(f"Results saved to {output_file}")
-        
         
         
         

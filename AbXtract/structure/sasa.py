@@ -200,13 +200,17 @@ class SASACalculator:
                 structure = freesasa.Structure(str(pdb_file))
                 result = freesasa.calc(structure)
                 
-                # Get middle residue (position 2) SASA
-                sidechain_area = 0
-                for atom_idx in range(structure.nAtoms()):
-                    if structure.residueNumber(atom_idx).strip() == '2':
-                        atom_name = structure.atomName(atom_idx).strip()
-                        if atom_name not in self.backbone_atoms:
-                            sidechain_area += result.atomArea(atom_idx)
+                for atom in range(structure.nAtoms()):
+                    if structure.residueNumber(atom).strip() == '2':
+                        sidechain_area += sasa.atomArea(atom)
+
+                # # Get middle residue (position 2) SASA
+                # sidechain_area = 0
+                # for atom_idx in range(structure.nAtoms()):
+                #     if structure.residueNumber(atom_idx).strip() == '2':
+                #         atom_name = structure.atomName(atom_idx).strip()
+                #         if atom_name not in self.backbone_atoms:
+                #             sidechain_area += sasa.atomArea(atom)
                 
                 exposed_sasas[aa] = sidechain_area
                 
