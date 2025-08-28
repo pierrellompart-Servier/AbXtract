@@ -168,6 +168,22 @@ pip install .
 export PATH=$PATH:$(pwd)
 ```
 
+### OpenBabel
+
+```bash
+# Check what's actually installed
+conda list | grep openbabel
+ldd /opt/conda/envs/abxtract/lib/python3.9/site-packages/openbabel/_openbabel.so
+
+# Force reinstall with specific versions that work together
+conda uninstall openbabel --force
+conda clean --all
+conda install -c conda-forge openbabel=3.1.1 python=3.9
+
+# Test if it works
+python -c "from openbabel import openbabel; print('OpenBabel loaded successfully')"```
+
+
 #### 5. Reduce (Hydrogen Addition)
 ```bash
 # Download from Duke University

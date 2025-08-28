@@ -154,10 +154,10 @@ class ChargeAnalyzer:
                 'dipole_moment': dipole_moment,
                 'charge_density': charge_density,
                 'positive_patches': self._find_charge_patches(
-                    positive_positions, threshold=5.0
+                    positive_positions, threshold=4.0
                 ),
                 'negative_patches': self._find_charge_patches(
-                    negative_positions, threshold=5.0
+                    negative_positions, threshold=4.0
                 )
             }
             

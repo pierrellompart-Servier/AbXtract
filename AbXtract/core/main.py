@@ -937,7 +937,7 @@ class AntibodyDescriptorCalculator:
             flat['Deamidation_Sites'] = liability_results.get('deamidation', 0)
             flat['Oxidation_Sites'] = liability_results.get('oxidation', 0)
             flat['Unpaired_Cysteines'] = liability_results.get('unpaired_cys', 0)
-        return flat
+        return liability_results
     
     def _flatten_bashour_results(self, bashour_results: pd.DataFrame) -> Dict:
         """Flatten Bashour results for DataFrame."""
@@ -973,7 +973,7 @@ class AntibodyDescriptorCalculator:
             flat['Turn_Content'] = summary.get('turn', 0)
             flat['Coil_Content'] = summary.get('coil', 0)
             flat['Mean_RSA'] = summary.get('mean_rsa', 0)
-        return flat
+        return dssp_results
     
     def _flatten_propka_results(self, propka_results: Dict) -> Dict:
         """Flatten PROPKA results."""
@@ -986,7 +986,7 @@ class AntibodyDescriptorCalculator:
             flat['Folding_energy_pH7'] = propka_results.get('stability_pH7', None)
             flat['Titratable_residues'] = propka_results.get('titratable_residues', 0)
             flat['Unusual_pKa_count'] = propka_results.get('unusual_pka_count', 0)
-        return flat
+        return propka_results
     
     def _flatten_arpeggio_results(self, arpeggio_results: Dict) -> Dict:
         """Flatten Arpeggio interaction results."""
@@ -998,7 +998,7 @@ class AntibodyDescriptorCalculator:
             flat['Hydrophobic_Interactions'] = arpeggio_results.get('hydrophobic', 0)
             flat['VdW_Contacts'] = arpeggio_results.get('vdw', 0)
             flat['Mean_Interaction_Distance'] = arpeggio_results.get('mean_distance', None)
-        return flat
+        return arpeggio_results
     
 def _calculate_combined_metrics(self) -> Dict[str, float]:
     """Calculate metrics that require both sequence and structure."""

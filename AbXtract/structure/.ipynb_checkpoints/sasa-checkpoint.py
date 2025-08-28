@@ -96,6 +96,7 @@ class SASACalculator:
             raise FileNotFoundError(f"PDB file not found: {pdb_file}")
         
         try:
+
             # Calculate SASA using FreeSASA
             structure = freesasa.Structure(str(pdb_file))
             result = freesasa.calc(structure)
@@ -173,52 +174,53 @@ class SASACalculator:
                 'n_buried': 0
             }
     
-    def calculate_exposed_reference_sasa(self, tripeptide_dir: Union[str, Path]) -> Dict[str, float]:
-        """
-        Calculate reference SASA values from tripeptide structures.
-        
-        Parameters
-        ----------
-        tripeptide_dir : str or Path
-            Directory containing tripeptide PDB files (A_X_A.pdb format)
-            
-        Returns
-        -------
-        dict
-            Dictionary of amino acid to exposed sidechain SASA
-        """
-        tripeptide_dir = Path(tripeptide_dir)
-        exposed_sasas = {}
-        
-        for aa in HYDROPHOBICITY_SCALE.keys():
-            pdb_file = tripeptide_dir / f"A_{aa[:1]}_A.pdb"
-            if not pdb_file.exists():
-                logger.warning(f"Tripeptide file not found: {pdb_file}")
-                continue
-            
-            try:
-                structure = freesasa.Structure(str(pdb_file))
-                result = freesasa.calc(structure)
-                
-                for atom in range(structure.nAtoms()):
-                    if structure.residueNumber(atom).strip() == '2':
-                        sidechain_area += sasa.atomArea(atom)
+    #def calculate_exposed_reference_sasa(self, tripeptide_dir: Union[str, Path]) -> Dict[str, float]:
+    #    """
+    #    Calculate reference SASA values from tripeptide structures.
+    #    
+    #    Parameters
+    #    ----------
+    #    tripeptide_dir : str or Path
+    #        Directory containing tripeptide PDB files (A_X_A.pdb format)
+    #        
+    #    Returns
+    #    -------
+    #    dict
+    #        Dictionary of amino acid to exposed sidechain SASA
+    #    """
+    #    tripeptide_dir = Path(tripeptide_dir)
+    #    exposed_sasas = {}
+    #    
+    #    for aa in HYDROPHOBICITY_SCALE.keys():
+    #        pdb_file = tripeptide_dir / f"A_{aa[:1]}_A.pdb"
+    #        if not pdb_file.exists():
+    #            logger.warning(f"Tripeptide file not found: {pdb_file}")
+    #            continue
+    #        
+    #        try:
+    #            structure = freesasa.Structure(str(pdb_file))
+    #            result = freesasa.calc(structure)
+    #            
+    #            for atom in range(structure.nAtoms()):
+    #                if structure.residueNumber(atom).strip() == '2':
+    #                    sidechain_area += sasa.atomArea(atom)
+    #            # # Get middle residue (position 2) SASA
+    #            # sidechain_area = 0
+    #            # for atom_idx in range(structure.nAtoms()):
+    #            #     if structure.residueNumber(atom_idx).strip() == '2':
+    #            #         atom_name = structure.atomName(atom_idx).strip()
+    #            #         if atom_name not in self.backbone_atoms:
+    #            #             sidechain_area += sasa.atomArea(atom)
+    #            
+    #            exposed_sasas[aa] = sidechain_area
+    #            
+    #        except Exception as e:
+    #            logger.warning(f"Failed to calculate SASA for {aa}: {e}")
+    #            exposed_sasas[aa] = 0
+    #    
+    #    return exposed_sasas
 
-                # # Get middle residue (position 2) SASA
-                # sidechain_area = 0
-                # for atom_idx in range(structure.nAtoms()):
-                #     if structure.residueNumber(atom_idx).strip() == '2':
-                #         atom_name = structure.atomName(atom_idx).strip()
-                #         if atom_name not in self.backbone_atoms:
-                #             sidechain_area += sasa.atomArea(atom)
-                
-                exposed_sasas[aa] = sidechain_area
-                
-            except Exception as e:
-                logger.warning(f"Failed to calculate SASA for {aa}: {e}")
-                exposed_sasas[aa] = 0
         
-        return exposed_sasas
 
 
 class SAPCalculator:
