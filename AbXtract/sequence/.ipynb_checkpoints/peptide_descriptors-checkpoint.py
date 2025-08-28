@@ -48,11 +48,25 @@ class PeptideDescriptorCalculator:
     >>> print(results.columns)
     """
     
-    def __init__(self):
-        """Initialize the calculator."""
+    def __init__(self, pH: float = 7.4, window: int = 5, angle: int = 100):
+        """Initialize the calculator.
+
+        Parameters
+        ----------
+        pH : float
+            pH for charge calculations (default: 7.4)
+        window : int
+            Window size for hydrophobic moment (default: 5)
+        angle : int
+            Angle for hydrophobic moment (default: 100)
+        """
         self.results = None
         self.descriptor_mapping = self._get_descriptor_mapping()
-    
+        self.pH = pH
+        self.window = window
+        self.angle = angle
+        
+        
     def _get_descriptor_mapping(self) -> Dict[str, str]:
         """Get mapping of descriptor codes to readable names."""
         return {
@@ -111,9 +125,9 @@ class PeptideDescriptorCalculator:
     def calculate_all(self, 
                      heavy_sequence: Optional[str] = None,
                      light_sequence: Optional[str] = None,
-                     pH: float = 7.4,
-                     window: int = 5,
-                     angle: int = 100) -> pd.DataFrame:
+                     pH: Optional[float] = None,
+                     window: Optional[int] = None,
+                     angle: Optional[int] = None) -> pd.DataFrame:
         """
         Calculate all peptide descriptors for antibody sequences.
         
@@ -135,6 +149,12 @@ class PeptideDescriptorCalculator:
         pd.DataFrame
             DataFrame with all calculated descriptors
         """
+
+        # Use instance defaults if not provided
+        pH = pH if pH is not None else self.pH
+        window = window if window is not None else self.window
+        angle = angle if angle is not None else self.angle
+
         results = []
         
         if heavy_sequence:
@@ -205,8 +225,8 @@ class PeptideDescriptorCalculator:
             'molar_extinction_cystines': self._safe_calc(
                 lambda: p.molar_extinction_coefficient()[1]
             ),
-            'gravy': self._safe_calc(p.gravy),
-            'aromaticity': self._safe_calc(p.aromaticity)
+            # 'gravy': self._safe_calc(p.gravy),
+            # 'aromaticity': self._safe_calc(p.aromaticity)
         }
     
     def _calculate_complex_descriptors(self, p: peptides.Peptide) -> Dict:
@@ -362,7 +382,7 @@ class PeptideDescriptorCalculator:
     
     def analyze_regions(self,
                        sequence: str,
-                       regions: List[Tuple[int, int]],
+                       regions: List[tuple[int, int]],
                        region_names: Optional[List[str]] = None) -> pd.DataFrame:
         """
         Analyze specific regions of a sequence.

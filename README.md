@@ -140,6 +140,14 @@ pip install propka
 propka --version
 ```
 
+#### 2. ANARCI
+```bash
+conda install -c conda-forge biopython -y
+conda install -c bioconda hmmer=3.3.2 -y
+cd ANARCI
+python setup.py install
+```
+
 #### 3. FreeSASA (Solvent Accessibility)
 ```bash
 # Usually installed with pip requirements

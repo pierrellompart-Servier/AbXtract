@@ -79,10 +79,10 @@ class Config:
     
     # External tool paths
     dssp_path: str = 'dssp'
-    propka_path: str = 'propka3'
-    arpeggio_path: str = 'pdbe-arpeggio'
+    propka_path: str = '/opt/conda/envs/abxtract/bin/propka3'
+    arpeggio_path: str = '/opt/conda/envs/abxtract/bin/pdbe-arpeggio'
     reduce_path: str = 'reduce'
-    muscle_path: str = 'muscle'
+    muscle_path: str = '/opt/conda/envs/abxtract/bin/muscle'
     
     # Sequence analysis parameters
     liability_definitions_path: Optional[str] = None

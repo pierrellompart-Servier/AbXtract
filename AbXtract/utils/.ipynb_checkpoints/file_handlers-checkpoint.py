@@ -231,7 +231,7 @@ def read_fasta(file_path: Union[str, Path]) -> Dict[str, str]:
 
 
 def write_fasta(
-    sequences: Union[Dict[str, str], List[Tuple[str, str]]],
+    sequences: Union[Dict[str, str], List[tuple[str, str]]],
     file_path: Union[str, Path]
 ) -> Path:
     """

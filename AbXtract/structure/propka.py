@@ -50,8 +50,10 @@ class PropkaAnalyzer:
     >>> print(f"Isoelectric point: {results['pI_folded']:.1f}")
     """
     
-    def __init__(self, propka_path: str = 'propka3', pH_range: Tuple[float, float] = (0, 14)):
+    def __init__(self, propka_path: str = 'propka3', pH: float = 7.0, temp_dir: Optional[str] = None, pH_range: Tuple[float, float] = (0, 14)):
         self.propka_path = propka_path
+        self.pH = pH
+        self.temp_dir = Path(temp_dir) if temp_dir else Path.cwd() / 'temp'
         self.pH_range = pH_range
         self._check_propka_installation()
         

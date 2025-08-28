@@ -447,7 +447,7 @@ def calculate_distance_matrix(
     pdb_file: Union[str, Path],
     chain_id: str,
     selection: str = 'ca'
-) -> Tuple[np.ndarray, List[Tuple[int, str]]]:
+) -> tuple[np.ndarray, List[tuple[int, str]]]:
     """
     Calculate distance matrix using ProDy.
     
@@ -494,9 +494,9 @@ def calculate_distance_matrix(
 
 
 def write_pdb(
-    structure: Union[PDB.Structure, PDB.Chain],
+    structure: [PDB.Structure, PDB.Chain],
     output_file: Union[str, Path],
-    select: Optional[Select] = None
+    select: None
 ) -> Path:
     """
     Write structure or chain to PDB file.

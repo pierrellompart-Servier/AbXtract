@@ -66,9 +66,10 @@ class SASACalculator:
     >>> print(f"Total SASA: {results['total_sasa']:.2f} Å²")
     """
     
-    def __init__(self, probe_radius: float = 1.4, n_points: int = 100):
+    def __init__(self, probe_radius: float = 1.4, n_points: int = 100, cutoff: float = 0.075):
         self.probe_radius = probe_radius
         self.n_points = n_points
+        self.cutoff = cutoff
         self.backbone_atoms = {'C', 'N', 'CA', 'O'}
     
     def calculate(self, pdb_file: Union[str, Path]) -> Dict:
@@ -146,8 +147,9 @@ class SASACalculator:
                             rel_sasa = total_res_sasa / SASA_MAX[res_name]
                             relative_sasa[res_id] = rel_sasa
                             
-                            if rel_sasa < 0.075:  # Buried threshold
+                            if rel_sasa < self.cutoff:  # Buried threshold
                                 buried_residues.append(res_id)
+
             
             return {
                 'total_sasa': total_sasa,

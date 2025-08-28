@@ -55,8 +55,9 @@ class ArpeggioAnalyzer:
     >>> print(f"Hydrogen bonds: {results['hydrogen_bonds']}")
     """
     
-    def __init__(self, arpeggio_path: str = 'pdbe-arpeggio', n_processes: int = 1):
+    def __init__(self, arpeggio_path: str = 'pdbe-arpeggio', temp_dir: Optional[str] = None, n_processes: int = 1):
         self.arpeggio_path = arpeggio_path
+        self.temp_dir = Path(temp_dir) if temp_dir else Path.cwd() / 'temp'
         self.n_processes = n_processes
         self._check_arpeggio_installation()
         

@@ -38,8 +38,9 @@ class ChargeAnalyzer:
     >>> print(f"Positive charge heterogeneity: {results['positive_heterogeneity']:.2f}")
     """
     
-    def __init__(self, pH: float = 7.0):
+    def __init__(self, pH: float = 7.0, distance_cutoff: float = 4.0):
         self.pH = pH
+        self.distance_cutoff = distance_cutoff
         self.positive_residues = {'HIS', 'ARG', 'LYS'}
         self.negative_residues = {'ASP', 'GLU'}
         
@@ -231,8 +232,10 @@ class ChargeAnalyzer:
     def _find_charge_patches(
         self,
         positions: List[np.ndarray],
-        threshold: float = 5.0
+        threshold: Optional[float] = None
     ) -> int:
+        if threshold is None:
+            threshold = self.distance_cutoff
         """
         Find patches of same-charge residues.
         

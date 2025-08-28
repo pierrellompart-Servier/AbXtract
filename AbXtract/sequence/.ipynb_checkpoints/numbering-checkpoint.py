@@ -142,10 +142,10 @@ class AntibodyNumbering:
         output = [(pos, aa) for pos, aa in numbered[0][0][0] if aa != "-"]
         
         # Validate numbering
-        numbers = [pos[0][0] for pos, aa in output]
-        if self.scheme == 'imgt':
-            if max(numbers) <= 120 or min(numbers) >= 8:
-                logger.warning("Sequence may be missing residues for accurate modeling")
+        # numbers = [pos[0][0] for pos, aa in output]
+        # if self.scheme == 'imgt':
+        #     if max(numbers) <= 120 or min(numbers) >= 8:
+        #         logger.warning("Sequence may be missing residues for accurate modeling")
         
         return output
     

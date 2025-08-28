@@ -37,6 +37,7 @@ from ..utils import (
     validate_pdb
 )
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -95,6 +96,7 @@ class AntibodyDescriptorCalculator:
             self.config = config
         else:
             raise TypeError(f"Config must be Config object or dict, got {type(config)}")
+
         
         # Initialize results storage
         self.results = {}
@@ -236,13 +238,13 @@ class AntibodyDescriptorCalculator:
             raise ValueError("At least one sequence (heavy or light) must be provided")
         
         # Parse and validate sequences
-        if heavy_sequence:
-            heavy_sequence = parse_sequence(heavy_sequence)
-            validate_sequence(heavy_sequence, chain_type='H')
-        
-        if light_sequence:
-            light_sequence = parse_sequence(light_sequence)
-            validate_sequence(light_sequence, chain_type='L')
+        # if heavy_sequence:
+        #     # heavy_sequence = parse_sequence(heavy_sequence)
+        #     validate_sequence(heavy_sequence, chain_type='H')
+        # 
+        # if light_sequence:
+        #     # light_sequence = parse_sequence(light_sequence)
+        #     validate_sequence(light_sequence, chain_type='L')
         
         # Determine antibody type
         ab_type = self._determine_antibody_type(heavy_sequence, light_sequence)
@@ -258,10 +260,20 @@ class AntibodyDescriptorCalculator:
         
         # Calculate numbering
         if heavy_sequence or light_sequence:
-            numbering_results = self.numbering.number_sequences(
-                heavy_sequence, light_sequence
-            )
+            sequences_dict = {}
+            if heavy_sequence:
+                sequences_dict['H'] = heavy_sequence
+            if light_sequence:
+                sequences_dict['L'] = light_sequence
+
+            numbering_results = self.numbering.number_sequences(sequences_dict)
             results.update(numbering_results)
+    
+        # if heavy_sequence or light_sequence:
+        #     numbering_results = self.numbering.number_sequences(
+        #         heavy_sequence, light_sequence
+        #     )
+        #     results.update(numbering_results)
         
         # Calculate liabilities
         if self.config.calculate_liabilities:
