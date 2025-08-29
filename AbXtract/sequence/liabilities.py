@@ -226,7 +226,7 @@ class SequenceLiabilityAnalyzer:
     #     
     #     logger.info(f"Loaded {len(self.liabilities)} liability definitions")
 
-    def load_liability_definitions(self, liability_file: Optional[Union[str, Path]] = None):
+    def _load_liability_definitions(self, liability_file: Optional[Union[str, Path]] = None):
         """Load liability definitions - uses hardcoded defaults."""
 
         # Hardcoded liability definitions
