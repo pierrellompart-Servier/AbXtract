@@ -196,35 +196,67 @@ class SequenceLiabilityAnalyzer:
         
         self._load_liability_definitions(liability_file)
     
-    def _load_liability_definitions(self, liability_file: Optional[Union[str, Path]] = None):
-        """Load liability definitions from file or use defaults."""
-        if liability_file and Path(liability_file).exists():
-            liability_path = Path(liability_file)
-        else:
-            # Create temporary default file
-            liability_path = Path("liabilities_temp.csv")
-            with open(liability_path, 'w') as f:
-                f.write(DEFAULT_LIABILITIES)
-        
+    # def _load_liability_definitions(self, liability_file: Optional[Union[str, Path]] = None):
+    #     """Load liability definitions from file or use defaults."""
+    #     if liability_file and Path(liability_file).exists():
+    #         liability_path = Path(liability_file)
+    #     else:
+    #         # Create temporary default file
+    #         liability_path = Path("liabilities_temp.csv")
+    #         with open(liability_path, 'w') as f:
+    #             f.write(DEFAULT_LIABILITIES)
+    #     print("liability_path", liability_path)
+    #     
+    #     self.liabilities = []
+    #     with open(liability_path) as f:
+    #         for line in f:
+    #             if line.strip() and not line.startswith("#"):
+    #                 parts = line.strip().split(",")
+    #                 if len(parts) == 3:
+    #                     name, regions, regex = parts
+    #                     self.liabilities.append([
+    #                         name,
+    #                         regions.split(";"),
+    #                         re.compile(regex)
+    #                     ])
+    #     
+    #     # Clean up temp file if created
+    #     if not liability_file:
+    #         liability_path.unlink()
+    #     
+    #     logger.info(f"Loaded {len(self.liabilities)} liability definitions")
+
+    def load_liability_definitions(self, liability_file: Optional[Union[str, Path]] = None):
+        """Load liability definitions - uses hardcoded defaults."""
+
+        # Hardcoded liability definitions
+        # Format: (name, regions_list, regex_pattern_string)
+        LIABILITY_DATA = [
+            ("Unpaired Cys (C)", ["fv"], r"C"),
+            ("N-linked glycosylation (NXS/T X not P)", ["fv"], r"N[^P][ST]"),
+            ("Met oxidation (M)", ["cdrs", "verniers"], r"M"),
+            ("Trp oxidation (W)", ["cdrs", "verniers"], r"W"),
+            ("Asn deamidation (NG NS NT)", ["cdrs", "verniers"], r"N[GST]"),
+            ("Asp isomerisation (DG DS DT DD DH)", ["cdrs", "verniers"], r"D[GSTDH]"),
+            ("Lysine Glycation (KE KD EK ED)", ["cdrs", "verniers"], r"KE|KD|EK|ED"),
+            ("N-terminal glutamate (VH and VL) (E)", ["nterminus"], r"E"),
+            ("Integrin binding (RGD RYD LDV)", ["fv"], r"RGD|RYD|LDV"),
+            ("CD11c/CD18 binding (GPR)", ["fv"], r"GPR"),
+            ("Fragmentation (DP)", ["cdrs", "verniers"], r"DP"),
+            ("Polyreactivity (RR VG VV VVV WW WWW WXW)", ["fv"], r"RR|VG|VV|VVV|WW|WWW|WXW"),
+        ]
+
+        # Build liabilities list with compiled regex patterns
         self.liabilities = []
-        with open(liability_path) as f:
-            for line in f:
-                if line.strip() and not line.startswith("#"):
-                    parts = line.strip().split(",")
-                    if len(parts) == 3:
-                        name, regions, regex = parts
-                        self.liabilities.append([
-                            name,
-                            regions.split(";"),
-                            re.compile(regex)
-                        ])
-        
-        # Clean up temp file if created
-        if not liability_file:
-            liability_path.unlink()
-        
+        for name, regions, pattern in LIABILITY_DATA:
+            self.liabilities.append([
+                name,
+                regions,
+                re.compile(pattern)
+            ])
+
         logger.info(f"Loaded {len(self.liabilities)} liability definitions")
-    
+
     def analyze(self,
                 heavy_sequence: Optional[str] = None,
                 light_sequence: Optional[str] = None) -> Dict:

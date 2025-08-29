@@ -21,6 +21,7 @@ from typing import Dict, List, Tuple, Optional, Union
 import pandas as pd
 import logging
 from anarci import anarci, validate_sequence, scheme_short_to_long
+import peptides
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +93,48 @@ class AntibodyNumbering:
         
         self.scheme = scheme
         self.restrict_species = restrict_species
+    
+
+
+    def get_peptide_profiles(self, sequence, window=1):
+        """
+        Compute various per-residue profiles for a peptide sequence.
+
+        Parameters:
+        -----------
+        sequence : str
+            The peptide sequence
+        window : int
+            Window size for profile calculations (default: 1)
+
+        Returns:
+        --------
+        dict : Dictionary containing different profile arrays
+        """
+        p = peptides.Peptide(sequence)
+        profiles = {}
+
+        # Common profiles using different scales
+        profile_scales = {
+            'charge_sign': peptides.tables.CHARGE.get('sign', {}),
+            'hydrophobicity_kd': peptides.tables.HYDROPHOBICITY.get('KyteDoolitle', {}),
+            'hydrophobicity_hw': peptides.tables.HYDROPHOBICITY.get('HoppWoods', {}),
+            'hydrophobicity_cornette': peptides.tables.HYDROPHOBICITY.get('Cornette', {}),
+            'hydrophobicity_eisenberg': peptides.tables.HYDROPHOBICITY.get('Eisenberg', {}),
+            'hydrophobicity_rose': peptides.tables.HYDROPHOBICITY.get('Rose', {}),
+            'hydrophobicity_janin': peptides.tables.HYDROPHOBICITY.get('Janin', {}),
+            'hydrophobicity_engelman': peptides.tables.HYDROPHOBICITY.get('Engelman', {}),
+        }
+
+        for profile_name, scale in profile_scales.items():
+            if scale:
+                try:
+                    profiles[profile_name] = p.profile(scale, window=window)
+                except:
+                    profiles[profile_name] = []
+
+        return profiles
+    
     
     def number_sequence(self,
                        sequence: str,
@@ -514,3 +557,5 @@ def get_region(position: Tuple[int, str],
     
     # Default to framework
     return f"fw{chain.lower()}1"
+
+

@@ -15,6 +15,7 @@ import warnings
 from datetime import datetime
 import tempfile
 import shutil
+import re
 
 from .config import Config, load_config
 # Add these imports to your existing imports in main.py
@@ -370,9 +371,43 @@ class AntibodyDescriptorCalculator:
         # Format output
         df = pd.DataFrame([results])
         
+        
+        
+        df = df.drop(["H", "L","Peptide_molar_extinction_reduced", "Peptide_molar_extinction_cystines"], axis = 1)
+        # list of charge cols
+        charge_cols = [f"Heavy_Charge_pH_{i}" for i in range(1, 15)]
+
+        # drop if they already exist
+        df = df.drop(columns=charge_cols, errors="ignore")
+
+        # expand the dictionary
+        charges_expanded = df["Heavy_Charges (all pH values)"].apply(pd.Series)
+        charges_expanded.columns = [f"Heavy_Charge_pH_{c}" for c in charges_expanded.columns]
+
+        # merge back
+        df = pd.concat([df.drop(columns=["Heavy_Charges (all pH values)"]),
+                                     charges_expanded], axis=1)
+
+        # list of charge cols
+        charge_cols = [f"Light_Charges_pH_{i}" for i in range(1, 15)]
+
+        # drop if they already exist
+        df = df.drop(columns=charge_cols, errors="ignore")
+
+        # expand the dictionary
+        charges_expanded = df["Light_Charges (all pH values)"].apply(pd.Series)
+        charges_expanded.columns = [f"Light_Charges_pH_{c}" for c in charges_expanded.columns]
+
+        # merge back
+        df = pd.concat([df.drop(columns=["Light_Charges (all pH values)"]),
+                                     charges_expanded], axis=1)
+
+        liabilities = df[["SeqID", "Type", "Heavy_Length", "Light_Length", "liabilities"]]
+        df = df.drop("liabilities", axis = 1)
+
         if return_details:
-            return df, results
-        return df
+            return df, liabilities, results
+        return df, liabilities
 
     def _flatten_protpy_results(self, protpy_results: Dict) -> Dict:
         """Flatten ProtPy results for DataFrame."""
@@ -413,6 +448,38 @@ class AntibodyDescriptorCalculator:
             'Negative_Charge_Clustering': dispersion_results.get('negative_charge_clustering', 0),
             'Net_Charge_Structure': dispersion_results.get('net_charge', 0)
         }
+    
+    def extract_value(self, val):
+        """Extract scalar value from protpy output (handles Series, arrays, etc.)."""
+        try:
+            # Handle pandas Series/DataFrame
+            if hasattr(val, 'iloc'):
+                if len(val) == 1:
+                    return float(val.iloc[0])
+                elif len(val) > 1:
+                    # For Series with multiple values, take the first
+                    return float(val.iloc[0])
+                else:
+                    return np.nan
+            # Handle numpy arrays
+            elif isinstance(val, np.ndarray):
+                if val.size == 1:
+                    return float(val.item())
+                elif val.size > 1:
+                    return float(val[0])
+                else:
+                    return np.nan
+            # Handle lists/tuples
+            elif isinstance(val, (list, tuple)):
+                if len(val) >= 1:
+                    return float(val[0])
+                else:
+                    return np.nan
+            # Handle scalar values
+            else:
+                return float(val)
+        except (ValueError, TypeError, AttributeError, IndexError):
+            return np.nan
 
 
     def calculate_structure_descriptors(
@@ -510,7 +577,7 @@ class AntibodyDescriptorCalculator:
                 if self.config.verbose:
                     raise
 
-        
+
         
         # Calculate charge properties
         if self.config.calculate_charge:
@@ -592,9 +659,23 @@ class AntibodyDescriptorCalculator:
                 propka_results = propka_results_tuple
                 df_residues = None
                 
+
+
+            df_propka_flat = self._flatten_propka_results(propka_results)
+            
+            df_propka_flat = pd.DataFrame([df_propka_flat])
+
+            for col in df_propka_flat.columns.tolist():
+                if col.startswith("Free_Energy_kcal_mol_pH_")  or col.startswith("pI_Folded_pH_")  or col.startswith("pI_Unfolded_pH_") or col.startswith("Protein_Charge_Folded_pH_") or col.startswith("Protein_Charge_Unfolded_pH_"):
+                    df_propka_flat[col] = [self.extract_value(i) for i in df_propka_flat[col].tolist()]
+            
+            
             
 
-            results.update(self._flatten_propka_results(propka_results))
+
+        
+        
+            results.update(df_propka_flat)
             # Get the .pka file path (assuming it's saved)
             pka_file = Path(self.config.temp_dir) / f"{structure_id}.pka"
             if pka_file.exists():
@@ -644,11 +725,69 @@ class AntibodyDescriptorCalculator:
         # Clean up temp files if needed
         if not self.config.keep_temp_files and preprocess:
             self._cleanup_temp_files()
+        structure_results_seq = df[['disulfide_bonds','residue_sap','high_sap_residues','residue_sasa','sidechain_sasa','relative_sasa','buried_residues',"residue_pka","pka_shifts","charge_profile","stability_profile"]]
+        structure_results_comp= df.drop(['disulfide_bonds', 'residue_sap', 'high_sap_residues', 'residue_sasa', 'sidechain_sasa', 'relative_sasa', 'buried_residues', "residue_pka", "pka_shifts", "charge_profile", "stability_profile", "secondary_structure", "ss_composition"], axis = 1)
+
+        # Method 1: Clean columns that need it
+        df_cleaned = structure_results_comp.copy()
+
+        # First, identify which columns need cleaning
+        columns_to_clean = []
+        for col in df_cleaned.columns:
+        	# Sample the first non-null value
+        	sample_val = df_cleaned[col].dropna().head(1) 
+        	if not sample_val.empty:
+        		sample_str = str(sample_val.iloc[0])
+        		if 'Name:' in sample_str or 'dtype:' in sample_str:
+        			columns_to_clean.append(col)
+
+
+        # Clean the identified columns
+        for col in columns_to_clean:
+        	df_cleaned[col] = df_cleaned[col].apply(self.extract_second_number)
+
+        structure_results_comp = df_cleaned.copy()
+
         
         if return_details:
-            return df, results, df_residues
-        return df, df_residues
+        	return structure_results_seq, structure_results_comp, df_residues, results
+        return structure_results_seq, structure_results_comp, df_residues
     
+
+
+    def extract_second_number(self, value):
+        """
+        Aggressively extract the second number from messy strings like:
+        '0 5.21 Name: pI_folded, dtype: float64'
+        Returns just 5.21
+        """
+        # Handle Series objects (extract first value)
+        if isinstance(value, pd.Series):
+            if len(value) > 0:
+                value = value.iloc[0]
+            else:
+                return np.nan
+        # Handle NaN values
+        if value is None or (isinstance(value, float) and np.isnan(value)):
+            return np.nan
+        # Convert to string
+        value_str = str(value)
+        # Find all numbers (including negative and decimals)
+        # This regex captures integers and floats
+        numbers = re.findall(r'-?\d+\.?\d*', value_str)
+        # Convert strings to floats
+        try:
+            if len(numbers) >= 2:
+                # Return the second number (index 1)
+                return float(numbers[1])
+            elif len(numbers) == 1:
+                # If only one number, return it
+                return float(numbers[0])
+            else:
+                return np.nan
+        except (ValueError, IndexError):
+            return np.nan
+	
     def calculate_all(
         self,
         heavy_sequence: Optional[str] = None,
@@ -695,7 +834,7 @@ class AntibodyDescriptorCalculator:
         
         # Calculate sequence descriptors if sequences provided
         if heavy_sequence or light_sequence:
-            seq_results = self.calculate_sequence_descriptors(
+            seq_results, liabilities = self.calculate_sequence_descriptors(
                 heavy_sequence, light_sequence,
                 sequence_id=sample_id,
                 return_details=True
@@ -738,7 +877,14 @@ class AntibodyDescriptorCalculator:
         # Store complete results
         self.results['all'] = all_results
         
-        return pd.DataFrame([all_results])
+        prop_df = pd.DataFrame([all_results])
+        
+        for col in prop_df.columns.tolist():
+            if col.startswith("Free_Energy_kcal_mol_pH_")  or col.startswith("pI_Folded_pH_")  or col.startswith("pI_Unfolded_pH_") or col.startswith("Protein_Charge_Folded_pH_") or col.startswith("Protein_Charge_Unfolded_pH_"):
+                prop_df[col] = [self.extract_value(i) for i in prop_df[col].tolist()]
+            
+            
+        return prop_df
     
     def save_results(
         self,
@@ -931,12 +1077,12 @@ class AntibodyDescriptorCalculator:
     def _flatten_liability_results(self, liability_results: Dict) -> Dict:
         """Flatten liability results for DataFrame."""
         flat = {}
-        if isinstance(liability_results, dict):
-            flat['Total_Liabilities'] = liability_results.get('total', 0)
-            flat['N_Glycosylation_Sites'] = liability_results.get('n_glycosylation', 0)
-            flat['Deamidation_Sites'] = liability_results.get('deamidation', 0)
-            flat['Oxidation_Sites'] = liability_results.get('oxidation', 0)
-            flat['Unpaired_Cysteines'] = liability_results.get('unpaired_cys', 0)
+        #if isinstance(liability_results, dict):
+        #    flat['Total_Liabilities'] = liability_results.get('total', 0)
+        #    flat['N_Glycosylation_Sites'] = liability_results.get('n_glycosylation', 0)
+        #    flat['Deamidation_Sites'] = liability_results.get('deamidation', 0)
+        #    flat['Oxidation_Sites'] = liability_results.get('oxidation', 0)
+        #    flat['Unpaired_Cysteines'] = liability_results.get('unpaired_cys', 0)
         return liability_results
     
     def _flatten_bashour_results(self, bashour_results: pd.DataFrame) -> Dict:
@@ -966,38 +1112,38 @@ class AntibodyDescriptorCalculator:
     def _flatten_dssp_results(self, dssp_results: Dict) -> Dict:
         """Flatten DSSP results."""
         flat = {}
-        if dssp_results and 'summary' in dssp_results:
-            summary = dssp_results['summary']
-            flat['Helix_Content'] = summary.get('helix', 0)
-            flat['Sheet_Content'] = summary.get('sheet', 0)
-            flat['Turn_Content'] = summary.get('turn', 0)
-            flat['Coil_Content'] = summary.get('coil', 0)
-            flat['Mean_RSA'] = summary.get('mean_rsa', 0)
+        # if dssp_results and 'summary' in dssp_results:
+        #     summary = dssp_results['summary']
+        #     flat['Helix_Content'] = summary.get('helix', 0)
+        #     flat['Sheet_Content'] = summary.get('sheet', 0)
+        #     flat['Turn_Content'] = summary.get('turn', 0)
+        #     flat['Coil_Content'] = summary.get('coil', 0)
+        #     flat['Mean_RSA'] = summary.get('mean_rsa', 0)
         return dssp_results
     
     def _flatten_propka_results(self, propka_results: Dict) -> Dict:
         """Flatten PROPKA results."""
         flat = {}
-        if propka_results:
-            flat['Folded_pI'] = propka_results.get('pI_folded', None)
-            flat['Unfolded_pI'] = propka_results.get('pI_unfolded', None)
-            flat['Folded_charge_pH7'] = propka_results.get('charge_pH7_folded', None)
-            flat['Unfolded_charge_pH7'] = propka_results.get('charge_pH7_unfolded', None)
-            flat['Folding_energy_pH7'] = propka_results.get('stability_pH7', None)
-            flat['Titratable_residues'] = propka_results.get('titratable_residues', 0)
-            flat['Unusual_pKa_count'] = propka_results.get('unusual_pka_count', 0)
+        # if propka_results:
+        #     flat['Folded_pI'] = propka_results.get('pI_folded', None)
+        #     flat['Unfolded_pI'] = propka_results.get('pI_unfolded', None)
+        #     flat['Folded_charge_pH7'] = propka_results.get('charge_pH7_folded', None)
+        #     flat['Unfolded_charge_pH7'] = propka_results.get('charge_pH7_unfolded', None)
+        #     flat['Folding_energy_pH7'] = propka_results.get('stability_pH7', None)
+        #     flat['Titratable_residues'] = propka_results.get('titratable_residues', 0)
+        #     flat['Unusual_pKa_count'] = propka_results.get('unusual_pka_count', 0)
         return propka_results
     
     def _flatten_arpeggio_results(self, arpeggio_results: Dict) -> Dict:
         """Flatten Arpeggio interaction results."""
         flat = {}
-        if arpeggio_results:
-            flat['Total_Interactions'] = arpeggio_results.get('total_interactions', 0)
-            flat['Hydrogen_Bonds'] = arpeggio_results.get('hydrogen_bonds', 0)
-            flat['Salt_Bridges'] = arpeggio_results.get('ionic', 0)
-            flat['Hydrophobic_Interactions'] = arpeggio_results.get('hydrophobic', 0)
-            flat['VdW_Contacts'] = arpeggio_results.get('vdw', 0)
-            flat['Mean_Interaction_Distance'] = arpeggio_results.get('mean_distance', None)
+        # if arpeggio_results:
+        #     flat['Total_Interactions'] = arpeggio_results.get('total_interactions', 0)
+        #     flat['Hydrogen_Bonds'] = arpeggio_results.get('hydrogen_bonds', 0)
+        #     flat['Salt_Bridges'] = arpeggio_results.get('ionic', 0)
+        #     flat['Hydrophobic_Interactions'] = arpeggio_results.get('hydrophobic', 0)
+        #     flat['VdW_Contacts'] = arpeggio_results.get('vdw', 0)
+        #     flat['Mean_Interaction_Distance'] = arpeggio_results.get('mean_distance', None)
         return arpeggio_results
     
 def _calculate_combined_metrics(self) -> Dict[str, float]:

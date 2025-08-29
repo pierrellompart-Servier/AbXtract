@@ -171,20 +171,16 @@ class PropkaAnalyzer:
         results['titratable_residues'] = len(residue_pka)
         
         # Extract charge at different pH values
-        print('_extract_charge_profile')
         charge_data = self._extract_charge_profile(pka_file)
         results.update(charge_data)
         
         # Extract free energy profile
-        print('_extract_energy_profile')
         energy_data = self._extract_energy_profile(content)
         results.update(energy_data)
         
         # Calculate additional metrics
-        print('_calculate_stability_metrics')
         results.update(self._calculate_stability_metrics(residue_pka, desolvation_effects))
         
-        print('parse_propka_file')
         df_pdb, df_residues = self.parse_propka_file(pka_file)
         results.update(df_pdb)
 
@@ -239,6 +235,37 @@ class PropkaAnalyzer:
         return charge_data
 
     
+    def extract_value(self, val):
+        """Extract scalar value from protpy output (handles Series, arrays, etc.)."""
+        try:
+            # Handle pandas Series/DataFrame
+            if hasattr(val, 'iloc'):
+                if len(val) == 1:
+                    return float(val.iloc[0])
+                elif len(val) > 1:
+                    # For Series with multiple values, take the first
+                    return float(val.iloc[0])
+                else:
+                    return np.nan
+            # Handle numpy arrays
+            elif isinstance(val, np.ndarray):
+                if val.size == 1:
+                    return float(val.item())
+                elif val.size > 1:
+                    return float(val[0])
+                else:
+                    return np.nan
+            # Handle lists/tuples
+            elif isinstance(val, (list, tuple)):
+                if len(val) >= 1:
+                    return float(val[0])
+                else:
+                    return np.nan
+            # Handle scalar values
+            else:
+                return float(val)
+        except (ValueError, TypeError, AttributeError, IndexError):
+            return np.nan
 
 
     def parse_propka_file(self, file_path):
@@ -302,15 +329,15 @@ class PropkaAnalyzer:
         # Build the PDB data row
         for ph in all_ph_values:
             # pI values (constant for all pH)
-            pdb_data[f'pI_Folded_pH_{ph:.2f}'] = pi_folded
-            pdb_data[f'pI_Unfolded_pH_{ph:.2f}'] = pi_unfolded
+            pdb_data[f'pI_Folded_pH_{ph:.2f}'] = self.extract_value(pi_folded)
+            pdb_data[f'pI_Unfolded_pH_{ph:.2f}'] = self.extract_value(pi_unfolded)
 
             # Protein charge values (available for all pH)
-            pdb_data[f'Protein_Charge_Folded_pH_{ph:.2f}'] = charge_dict['folded'].get(ph, None)
-            pdb_data[f'Protein_Charge_Unfolded_pH_{ph:.2f}'] = charge_dict['unfolded'].get(ph, None)
+            pdb_data[f'Protein_Charge_Folded_pH_{ph:.2f}'] = self.extract_value(charge_dict['folded'].get(ph, None))
+            pdb_data[f'Protein_Charge_Unfolded_pH_{ph:.2f}'] = self.extract_value(charge_dict['unfolded'].get(ph, None))
 
             # Free energy values (only available at integer pH values)
-            pdb_data[f'Free_Energy_kcal_mol_pH_{ph:.2f}'] = free_energy_dict.get(ph, None)
+            pdb_data[f'Free_Energy_kcal_mol_pH_{ph:.2f}'] = self.extract_value(free_energy_dict.get(ph, None))
 
         # Create PDB dataframe (one row)
         df_pdb = pd.DataFrame([pdb_data])

@@ -16,12 +16,27 @@ import tempfile
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Union
-
+import os
+import subprocess
+from pathlib import Path
+from multiprocessing import Pool
+import gemmi  # Import gemmi Python module directly
 import gemmi
 import numpy as np
 
-logger = logging.getLogger(__name__)
+import os
+import subprocess
+from pathlib import Path
+from multiprocessing import Pool
 
+logger = logging.getLogger(__name__)
+import os
+import json
+from operator import itemgetter
+from collections import defaultdict, Counter
+import numpy as np
+#from multiprocessing import Pool
+import pandas as pd
 
 class ArpeggioAnalyzer:
     """
@@ -66,61 +81,153 @@ class ArpeggioAnalyzer:
         Run Arpeggio analysis on PDB structure.
         """
         pdb_file = Path(pdb_file)
-        if not pdb_file.exists():
-            raise FileNotFoundError(f"PDB file not found: {pdb_file}")
+        cpus = 23
+
+        # running on hydrogenated structures
+        # from greiff paper:
+        # Finally, we used Arpeggio (version 1.4.1) to calculate interatomic interactions 
+        #   after converting antibody hydrogenated structures to cif format
+        structures = [pdb_file]
+        output_path = './data/test/arpeggio/'
+
+
+
+
+        pool = Pool(processes=cpus)
+        results = pool.map(self.run_arpeggio, structures)
+        pool.close()
+        pool.join()
+
+        # Summary
+        successful = sum(1 for r in results if r)
+
+        path = './data/test/arpeggio/'
+        files = [path + f for f in os.listdir(path) if f.endswith('.json')]
+
+        results = []
+        for file in files:
+            output = self.run_arpu(file)
+            results.append(output)
+
+        d_protint = defaultdict(dict)
+
+        for n, (f, r) in enumerate(zip(files, results)):
+            #print(n)
+            name = f.split('/')[-1].split('.')[0]
+            d_protint[name] = r
+        df = pd.DataFrame(d_protint.values(), index=d_protint.keys())
+        df = df.reset_index()
+        df = df.rename(columns={'index':'SeqID'})
+        df
         
-        with tempfile.TemporaryDirectory() as tmpdir:
-            tmpdir = Path(tmpdir)
+        return(df)
+
             
+
+    
+    
+    
+    
+    
+    def run_arpeggio(self, structure):
+        """
+        Convert PDB to CIF using gemmi Python API and run Arpeggio
+        """
+        try:
+
+            # Define file paths
+            pdb_file = structure
+            cif_file = structure[:-4] + '.cif'
+
+            # Convert from PDB to mmCIF format using gemmi Python API
+
+            # Read PDB structure
+            struct = gemmi.read_structure(pdb_file)
+
+            # Write as mmCIF - try different methods based on gemmi version
             try:
-                # Convert PDB to CIF format
-                cif_file = tmpdir / f"{pdb_file.stem}.cif"
-                self._convert_to_cif(pdb_file, cif_file)
-                
-                # Run Arpeggio
-                output_prefix = tmpdir / pdb_file.stem
-                cmd = [
-                    self.arpeggio_path,
-                    '-m',  # Include main chain
-                    str(cif_file),
-                    '-o', str(output_prefix)
-                ]
-                
-                result = subprocess.run(
-                    cmd, 
-                    capture_output=True, 
-                    text=True,
-                    cwd=str(tmpdir)  # Run in temp directory
-                )
-                
-                if result.returncode != 0:
-                    logger.error(f"Arpeggio failed: {result.stderr}")
-                    return self._empty_results()
-                
-                # Parse JSON output - Arpeggio creates .json file with the base name
-                json_file = output_prefix.with_suffix('.json')
-                
-                # Check alternative naming patterns
-                if not json_file.exists():
-                    # Try without path prefix
-                    json_file = tmpdir / f"{pdb_file.stem}.json"
-                
-                if not json_file.exists():
-                    # List all json files in tmpdir for debugging
-                    json_files = list(tmpdir.glob("*.json"))
-                    if json_files:
-                        json_file = json_files[0]
-                    else:
-                        logger.error(f"Arpeggio JSON output not found in {tmpdir}")
-                        return self._empty_results()
-                
-                return self._parse_arpeggio_output(json_file)
-                
-            except Exception as e:
-                logger.error(f"Arpeggio analysis failed: {e}")
-                import traceback
-                logger.error(traceback.format_exc())
-                return self._empty_results()
+                # Try newer gemmi method
+                struct.write_cif(cif_file)
+            except AttributeError:
+                try:
+                    # Try alternative method for writing CIF
+                    struct.make_mmcif_document().write_file(cif_file)
+                except AttributeError:
+                    try:
+                        # Another alternative for older versions
+                        doc = struct.make_mmcif_document()
+                        doc.write_file(cif_file)
+                    except:
+                        # If all else fails, use gemmi cif module directly
+                        import gemmi.cif as cif
+                        doc = struct.make_mmcif_document()
+                        doc.write_file(cif_file)
+
+            # Check if CIF file was created
+            if not Path(cif_file).exists():
+                return False
+
+            # Run arpeggio on CIF file
+            run_cmd = '/opt/conda/envs/propermab/bin/pdbe-arpeggio -m ' + cif_file + ' -o ' + output_path
+
+            result = subprocess.call(run_cmd, shell=True)
+
+            if result == 0:
+                return True
+            else:
+                return False
+
+        except Exception as e:
+            return False
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+    
+    def flatten(t):
+        return [item for sublist in t for item in sublist]
+
+
+    def run_arpu(self, f):
+
+        #print(f)
+        d = {}
+        with open(f) as rf:
+            json_d = json.load(rf)
+
+            contacts = Counter(flatten([j['contact'] for j in json_d]))
+
+            interactions = [itemgetter('distance', 'interacting_entities', 'type')(j) for j in json_d]
+            interacting_entities = Counter([i[1] for i in interactions])
+            types = Counter([i[2] for i in interactions])
+
+            d.update(contacts)
+            d.update(interacting_entities)
+            d.update(types)
+            d.update({'distance': np.mean([i[0] for i in interactions])})
+
+        return d
+
+
+
+
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
 
     def _convert_to_cif(self, pdb_file: Path, cif_file: Path):
         """Convert PDB to mmCIF format using gemmi."""
