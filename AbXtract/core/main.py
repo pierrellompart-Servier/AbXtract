@@ -35,13 +35,42 @@ from ..structure import (
     DisulfideBondAnalyzer,      # NEW
     ChargeDispersionAnalyzer,   # NEW
     ExtendedSASACalculator,      # NEW
-    ExtendedPropkaAnalyzer       # NEW
+    ExtendedPropkaAnalyzer,       # NEW
+    computeDescriptors
 )
 from ..utils import (
     parse_pdb,
     parse_sequence,
     validate_sequence,
     validate_pdb
+)
+
+from ..utils.constants import (
+    main_chain,
+    three_to_one,
+    hydrophobic_residues,
+    HYDROPHOBIC_RESIDUES,
+    HYDROPHOBIC_AA,
+    pKa_dict,
+    AA_CHARGE,
+    AA_MW,
+    AA_VOLUME,
+    AA_CHARGE,
+    AA_PI,
+    AA_CLASSES,
+    AA_LIST,
+    KABAT_SCHEME,
+    CHOTHIA_SCHEME,
+    IMGT_SCHEME,
+    HYD_SCALES,
+    KD_SCALE,
+    EISENBERG_SCALE,
+    CRIPPEN_PARAMS,
+    PDB_TO_CRIPPEN,
+    get_uniprot_seq,
+    HC_SEQS,
+    LC_SEQS,
+    HINGE_REGIONS,
 )
 
 
@@ -199,7 +228,7 @@ class AntibodyDescriptorCalculator:
             pH=self.config.pH
         )
 
-    
+        
         self.arpeggio_analyzer = ArpeggioAnalyzer(
             arpeggio_path=self.config.arpeggio_path,
             temp_dir=self.config.temp_dir
@@ -485,6 +514,8 @@ class AntibodyDescriptorCalculator:
     def calculate_structure_descriptors(
         self,
         pdb_file: Union[str, Path],
+        heavy_sequence: Optional[str] = None,
+        light_sequence: Optional[str] = None,
         structure_id: Optional[str] = None,
         preprocess: bool = True,
         return_details: bool = False
@@ -696,8 +727,18 @@ class AntibodyDescriptorCalculator:
                 stability = self.extended_propka_analyzer.calculate_stability_metrics(pka_file)
                 results.update({f'stability_{k}': v for k, v in stability.items()})
 
-
-
+        # Run computeProper
+        if self.config.calculate_proper:
+        
+            df_AA, df_Ab = computeDescriptors(
+                        is_fv=self.config.is_fv,
+                        lc_type=self.config.lc_type,
+                        isotype=self.config.isotype,
+                        pH=self.config.pH,   
+                        pdb_file=pdb_file,
+                        HC=heavy_sequence,
+                        LC=light_sequence
+                        )
 
         # Run Arpeggio
         if self.config.calculate_arpeggio:
@@ -751,7 +792,7 @@ class AntibodyDescriptorCalculator:
         
         if return_details:
         	return structure_results_seq, structure_results_comp, df_residues, results
-        return structure_results_seq, structure_results_comp, df_residues
+        return structure_results_seq, structure_results_comp, df_residues, df_AA, df_Ab
     
 
 
@@ -844,6 +885,7 @@ class AntibodyDescriptorCalculator:
         # Calculate structure descriptors if PDB provided
         if pdb_file:
             struct_results = self.calculate_structure_descriptors(
+                heavy_sequence, light_sequence,
                 pdb_file,
                 structure_id=sample_id,
                 return_details=True

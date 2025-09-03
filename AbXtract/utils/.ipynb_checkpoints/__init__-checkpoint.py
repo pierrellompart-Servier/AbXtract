@@ -13,6 +13,34 @@ from .pdb_utils import (
     write_pdb
 )
 
+from .constants import (
+    main_chain,
+    three_to_one,
+    hydrophobic_residues,
+    HYDROPHOBIC_RESIDUES,
+    HYDROPHOBIC_AA,
+    pKa_dict,
+    AA_CHARGE,
+    AA_MW,
+    AA_VOLUME,
+    AA_CHARGE,
+    AA_PI,
+    AA_CLASSES,
+    AA_LIST,
+    KABAT_SCHEME,
+    CHOTHIA_SCHEME,
+    IMGT_SCHEME,
+    HYD_SCALES,
+    KD_SCALE,
+    EISENBERG_SCALE,
+    CRIPPEN_PARAMS,
+    PDB_TO_CRIPPEN,
+    get_uniprot_seq,
+    HC_SEQS,
+    LC_SEQS,
+    HINGE_REGIONS,
+)
+
 from .file_handlers import (
     FileHandler,
     read_fasta,

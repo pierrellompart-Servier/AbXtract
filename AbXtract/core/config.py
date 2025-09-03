@@ -89,9 +89,13 @@ class Config:
         
     # General parameters
     numbering_scheme: str = 'imgt'
-    pH: float = 7.0
+    pH: float = 7.4
     temperature: float = 25.0
     restrict_species: bool = True
+    isotype: str = 'igg1'
+    lc_type: str = 'kappa'
+    is_fv: bool = True
+    
     
     # External tool paths
     dssp_path: str = 'dssp'
@@ -134,6 +138,7 @@ class Config:
     calculate_propka: bool = True
     calculate_arpeggio: bool = True
     calculate_cdr_properties: bool = True
+    calculate_proper: bool = True
     
     # Advanced parameters
     max_iterations: int = 1000
