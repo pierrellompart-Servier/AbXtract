@@ -3,33 +3,39 @@
 [![PyPI version](https://badge.fury.io/py/AbXtract.svg)](https://badge.fury.io/py/AbXtract)
 [![Python Version](https://img.shields.io/pypi/pyversions/AbXtract)](https://pypi.org/project/AbXtract/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Documentation Status](https://readthedocs.org/projects/abxtract/badge/?version=latest)](https://abxtract.readthedocs.io)
 
-**AbXtract** is a comprehensive Python toolkit for extracting and analyzing antibody descriptors from sequences and structures. It provides a unified interface for calculating hundreds of physicochemical, structural, and sequence-based features for antibody characterization and machine learning applications.
+**AbXtract** is a comprehensive Python toolkit for extracting and analyzing antibody descriptors from sequences and structures. It provides a unified interface for calculating thousands of physicochemical, structural, and sequence-based features for antibody characterization and machine learning applications.
 
 ## 🎯 Key Features
 
-- **📊 Comprehensive Descriptor Calculation**: Extract 500+ descriptors from antibody sequences and structures
-- **🔬 Multi-level Analysis**: Sequence, structure, and interaction-based features
-- **⚡ High Performance**: Parallel processing and optimized algorithms
-- **🧬 Antibody-Specific**: Specialized features for VH/VL domains and CDR regions
+- **📊 Comprehensive Descriptor Calculation**: Extract 30,000+ descriptors from antibody sequences and structures
+- **🔬 Multi-level Analysis**: 
+  - Sequence-based features (Bashour, ProtPy, Peptide descriptors)
+  - Structure-based features (SASA, DSSP, Arpeggio interactions)
+  - Physicochemical properties (charge, pKa via PROPKA, hydrophobicity)
+  - Liability detection (PTMs, aggregation hotspots, immunogenicity)
+- **⚡ High Performance**: Parallel processing with optimized algorithms
+- **🧬 Antibody-Specific**: 
+  - CDR identification and analysis
+  - Multiple numbering schemes (IMGT, Kabat, Chothia, Martin, AHo)
+  - VH/VL interface analysis
+- **📈 Advanced Visualization**: Built-in plotting for property profiles
 - **🔧 Flexible Integration**: Easy integration with ML pipelines
-- **📈 Visualization Tools**: Built-in plotting and analysis functions
-- **🐳 Docker Support**: Containerized deployment for reproducibility
 
 ## 📋 Table of Contents
 
 - [Installation](#-installation)
 - [Quick Start](#-quick-start)
-- [Features](#-features)
+- [Core Modules](#-core-modules)
 - [Usage Examples](#-usage-examples)
-- [API Reference](#-api-reference)
+- [Descriptor Categories](#-descriptor-categories)
+- [Visualization](#-visualization)
 - [Environment Management](#-environment-management)
 - [External Tools](#-external-tools)
+- [API Reference](#-api-reference)
 - [Development](#-development)
 - [Troubleshooting](#-troubleshooting)
 - [Citation](#-citation)
-- [License](#-license)
 
 ## 🚀 Installation
 
@@ -47,32 +53,37 @@ conda activate abxtract
 python -c "import AbXtract; print(f'AbXtract v{AbXtract.__version__} ready!')"
 ```
 
-### Alternative Installation Methods
+### Export Your Working Environment
 
-#### Method 1: PyPI Installation
+If you have a working AbXtract setup, you can save it for others:
+
 ```bash
-# Basic installation
-pip install AbXtract
+# Quick export
+conda activate abxtract
+conda env export > abxtract_environment.yml
 
-# With all optional dependencies
-pip install AbXtract[all]
+# Cross-platform export (recommended)
+conda env export --no-builds > abxtract_environment_crossplatform.yml
+
+# Or use the provided script
+bash export_env_bash.sh abxtract
 ```
 
-#### Method 2: Development Installation
+### Alternative Installation Methods
+
+#### Method 1: Development Installation
 ```bash
 # Clone repository
 git clone https://github.com/pierrellompart-Servier/AbXtract.git
 cd AbXtract
 
 # Install in development mode
-pip install -e .[dev,docs,viz]
+pip install -e .
 ```
 
-#### Method 3: Docker Installation
+#### Method 2: PyPI Installation (when available)
 ```bash
-# Pull and run Docker image
-docker pull abxtract/abxtract:latest
-docker run -it abxtract/abxtract:latest
+pip install AbXtract
 ```
 
 ## ⚡ Quick Start
@@ -86,251 +97,242 @@ from AbXtract import AntibodyDescriptorCalculator
 calc = AntibodyDescriptorCalculator()
 
 # Calculate descriptors from sequences
-results = calc.calculate_sequence_descriptors(
+sequence_results, liabilities = calc.calculate_sequence_descriptors(
     heavy_sequence="QVQLVQSGAEVKKPGASVKVSCKASGGTFSSYAISWVRQAPGQGLEWMGG",
-    light_sequence="DIQMTQSPSSLSASVGDRVTITCRASHSISWLAWYQQKPGKAPKLLIY"
+    light_sequence="DIQMTQSPSSLSASVGDRVTITCRASHSISWLAWYQQKPGKAPKLLIY",
+    sequence_id="TestAb"
 )
 
-print(f"Calculated {len(results.columns)} descriptors")
-print(results.head())
+print(f"Calculated {len(sequence_results.columns)} sequence descriptors")
+print(f"Detected liabilities: {liabilities['liabilities'].iloc[0]}")
 ```
 
 ### Structure-Based Analysis
 
 ```python
-# Calculate descriptors from PDB structure
-results = calc.calculate_structure_descriptors(
+# Calculate structure descriptors
+structure_results_seq, structure_results_comp, df_residues, df_AA, df_Ab = calc.calculate_structure_descriptors(
+    heavy_sequence=heavy_sequence,
+    light_sequence=light_sequence,
     pdb_file="antibody.pdb",
-    heavy_chain="H",
-    light_chain="L"
+    structure_id="TestAb_Structure"
 )
 
-# Access specific descriptor categories
-sequence_features = results.filter(regex='sequence_')
-structural_features = results.filter(regex='structure_')
-cdr_features = results.filter(regex='cdr_')
+print(f"Residue-level descriptors: {df_residues.shape}")
+print(f"Amino acid descriptors: {df_AA.shape}")
+print(f"Antibody-level descriptors: {df_Ab.shape}")
 ```
 
-### Command-Line Interface
+## 🔬 Core Modules
 
-```bash
-# Basic sequence analysis
-abxtract analyze --heavy QVQLVQSG... --light DIQMTQSP... -o results.csv
+### Sequence Analysis (`AbXtract.sequence`)
 
-# Structure analysis
-abxtract analyze --pdb antibody.pdb --heavy-chain H --light-chain L
+- **`BashourDescriptorCalculator`**: Bashour et al. antibody-specific descriptors
+- **`PeptideDescriptorCalculator`**: Comprehensive peptide properties
+- **`SequenceLiabilityAnalyzer`**: PTM and liability detection
+- **`AntibodyNumbering`**: Multiple numbering schemes and CDR identification
+- **`protpy_descriptors`**: ProtPy-based sequence features
 
-# Batch processing
-abxtract batch --input sequences.fasta --output descriptors/ --parallel 4
-```
+### Structure Analysis (`AbXtract.structure`)
 
-## 🔬 Features
+- **`SASACalculator`**: Solvent accessible surface area analysis
+- **`DSSPAnalyzer`**: Secondary structure assignment
+- **`ChargeAnalyzer`**: Charge distribution and patches
+- **`PropkaAnalyzer`**: pKa predictions and pH-dependent properties
+- **`ArpeggioAnalyzer`**: Molecular interactions (H-bonds, salt bridges, π-stacking)
+- **`properdesc`**: Proper descriptor calculation
 
-### Descriptor Categories
+### Utilities (`AbXtract.utils`)
 
-#### 1. **Sequence-Based Descriptors**
+- **`analysis_descriptors`**: Advanced analysis and visualization functions
+- **`validators`**: Sequence and structure validation
+- **`converters`**: Format conversion utilities
+- **`pdb_utils`**: PDB file manipulation
+
+## 📊 Descriptor Categories
+
+### 1. Sequence-Based Descriptors (5,000+)
 - Amino acid composition and properties
-- Hydrophobicity profiles
-- Charge distribution
-- Sequence motifs and patterns
-- CDR length and composition
+- Hydrophobicity profiles (multiple scales)
+- Charge distribution patterns
+- Sequence complexity metrics
+- CDR-specific features
+- Peptide descriptors for all k-mers
 
-#### 2. **Structure-Based Descriptors**
+### 2. Structure-Based Descriptors (10,000+)
+- Per-residue SASA and burial
 - Secondary structure elements
-- Solvent accessibility (SASA)
-- Radius of gyration
-- B-factors and flexibility
-- Structural compactness
+- Interaction networks
+- Spatial aggregation propensity (SAP)
+- Charge patches
+- pH-dependent properties
 
-#### 3. **Physicochemical Properties**
+### 3. Physicochemical Properties (1,000+)
 - Molecular weight and pI
-- Instability index
-- Aliphatic index
-- GRAVY score
+- Instability and aliphatic indices
+- GRAVY scores
 - Extinction coefficients
+- Dipole moments
+- Electrostatic properties
 
-#### 4. **Interaction Features**
-- Hydrogen bonds
-- Salt bridges
-- Disulfide bonds
-- Aromatic interactions
-- VH-VL interface properties
+### 4. Liability Features (50+)
+- Post-translational modifications
+  - N-glycosylation sites
+  - Deamidation hotspots
+  - Oxidation sites (Met, Trp)
+  - Isomerization sites
+- Aggregation prone regions
+- Immunogenicity motifs
+- Polyreactivity signatures
 
-#### 5. **CDR-Specific Features**
-- CDR canonical classes
-- Loop geometry
-- Residue preferences
-- Structural variability
-- Paratope predictions
+### 5. pH-Dependent Properties (141 pH points)
+- Charge profiles
+- Folded/unfolded states
+- Free energy changes
+- pKa shifts
+- Titration curves
 
-### Supported Numbering Schemes
-- **IMGT**: Standard IMGT numbering
-- **Kabat**: Classical Kabat scheme
-- **Chothia**: Structural numbering
-- **Martin**: Enhanced Chothia
-- **AHo**: Aho numbering scheme
+## 📈 Visualization
 
-## 📖 Usage Examples
-
-### Example 1: Batch Processing Multiple Sequences
+AbXtract includes comprehensive visualization capabilities:
 
 ```python
-import pandas as pd
-from AbXtract import AntibodyDescriptorCalculator
+from AbXtract.utils import analysis_descriptors
 
-# Load sequences
-sequences = pd.read_csv("antibody_sequences.csv")
-
-# Initialize calculator with custom config
-calc = AntibodyDescriptorCalculator(
-    config={
-        'n_jobs': 4,  # Parallel processing
-        'calculate_structure': False,  # Skip structure features
-        'numbering_scheme': 'imgt'  # Use IMGT numbering
-    }
+# Create complete antibody dataframe with all features
+df_heavy_final, df_light_final, df_final = desc_Ab(
+    HEAVY_SEQUENCE, 
+    LIGHT_SEQUENCE, 
+    PDB_FILE
 )
 
-# Process all sequences
-all_descriptors = []
-for idx, row in sequences.iterrows():
-    descriptors = calc.calculate_sequence_descriptors(
-        heavy_sequence=row['VH'],
-        light_sequence=row['VL'],
-        sequence_id=row['ID']
-    )
-    all_descriptors.append(descriptors)
+# Plot protein properties
+fig = analysis_descriptors.plot_protein_properties(df_heavy_final, chain_type='heavy')
+plt.show()
 
-# Combine results
-results_df = pd.concat(all_descriptors)
-results_df.to_csv("antibody_descriptors.csv", index=False)
+# Plot pH profiles
+patterns = ["Light_Charges_pH_", "Heavy_Charge_pH_", "Free_Energy_kcal_mol_"]
+col_ph = [col for col in df_final.columns if any(p in col for p in patterns)]
+object_df = analysis_descriptors.reshape_dataframe_by_object(df_final[col_ph])[0]
+fig = analysis_descriptors.plot_ph_profiles(object_df, object_id=0)
+plt.show()
+
+# Plot PROPKA-specific properties
+fig_propka = analysis_descriptors.plot_propka_properties(df_heavy_final, chain_type='heavy')
+plt.show()
 ```
 
-### Example 2: Structure Analysis with Visualization
+## 🔧 External Tools Integration
 
-```python
-from AbXtract import AntibodyDescriptorCalculator, Visualizer
-
-# Calculate structural descriptors
-calc = AntibodyDescriptorCalculator()
-results = calc.calculate_structure_descriptors(
-    pdb_file="1igm.pdb",
-    heavy_chain="H",
-    light_chain="L",
-    include_interactions=True
-)
-
-# Visualize results
-viz = Visualizer()
-
-# Plot hydrophobicity surface
-viz.plot_hydrophobicity_surface(results)
-
-# CDR interaction network
-viz.plot_cdr_interactions(results)
-
-# Save report
-viz.generate_report(results, output="antibody_analysis_report.html")
-```
-
-### Example 3: Machine Learning Pipeline Integration
-
-```python
-from AbXtract import AntibodyDescriptorCalculator
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split
-import pandas as pd
-
-# Load data
-data = pd.read_csv("antibody_affinity_data.csv")
-
-# Calculate descriptors
-calc = AntibodyDescriptorCalculator()
-X = []
-for idx, row in data.iterrows():
-    descriptors = calc.calculate_sequence_descriptors(
-        heavy_sequence=row['VH'],
-        light_sequence=row['VL']
-    )
-    X.append(descriptors)
-
-X = pd.DataFrame(X)
-y = data['affinity_nM']
-
-# Train model
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-model = RandomForestRegressor(n_estimators=100)
-model.fit(X_train, y_train)
-
-# Feature importance
-feature_importance = pd.DataFrame({
-    'feature': X.columns,
-    'importance': model.feature_importances_
-}).sort_values('importance', ascending=False)
-
-print("Top 10 important features:")
-print(feature_importance.head(10))
-```
-
-## 🔧 Environment Management
-
-### Saving Your Environment
-
-If you've successfully set up AbXtract and want to share your environment:
-
-```bash
-# Method 1: Quick export
-conda activate abxtract
-conda env export > abxtract_environment.yml
-
-# Method 2: Cross-platform export
-conda env export --no-builds > abxtract_environment_crossplatform.yml
-
-# Method 3: Use our export script
-python export_env.py
-```
-
-### Installing from Environment File
-
-```bash
-# Create environment from file
-conda env create -f abxtract_environment.yml
-
-# Activate environment
-conda activate abxtract
-
-# Update existing environment
-conda env update -f abxtract_environment.yml --prune
-```
-
-## 🛠️ External Tools
-
-AbXtract integrates with several external tools for enhanced functionality:
+AbXtract integrates with several computational biology tools:
 
 ### Required Tools
-- **ANARCI**: Antibody numbering (installed automatically)
-- **DSSP**: Secondary structure assignment
-- **FreeSASA**: Solvent accessibility calculations
-- **BioPython**: Sequence manipulation
+```python
+from AbXtract import Config
 
-### Optional Tools
-- **PROPKA**: pKa predictions
-- **Arpeggio**: Interaction analysis
-- **Reduce**: Hydrogen addition
-- **MUSCLE**: Sequence alignment
-- **OpenBabel**: Molecular conversions
+# Check tool availability
+config = Config()
+tool_status = config.check_external_tools()
 
-### Installing External Tools
+for tool, available in tool_status.items():
+    status = "✅" if available else "❌"
+    print(f"{tool}: {status}")
+```
 
+### Tool Installation
 ```bash
-# Via conda (recommended)
-conda install -c conda-forge dssp freesasa propka
+# Core tools via conda
+conda install -c conda-forge dssp freesasa
+conda install -c bioconda hmmer=3.3.2 muscle
 
-# ANARCI setup
+# PROPKA for pKa calculations
+pip install propka
+
+# ANARCI for antibody numbering
 pip install anarci
 python -c "import anarci; anarci.setup()"
 
-# Verify tools
-python -c "from AbXtract import Config; Config().check_external_tools()"
+# Arpeggio for interactions (included in repo)
+cd arpeggio && python setup.py install
+```
+
+## 📖 Usage Examples
+
+### Example 1: Complete Antibody Analysis Pipeline
+
+```python
+import sys
+import pandas as pd
+from pathlib import Path
+sys.path.insert(0, '/path/to/AbXtract')
+
+from AbXtract import AntibodyDescriptorCalculator, Config
+from AbXtract.sequence import (
+    SequenceLiabilityAnalyzer,
+    BashourDescriptorCalculator,
+    PeptideDescriptorCalculator,
+    AntibodyNumbering
+)
+from AbXtract.utils import analysis_descriptors
+
+# Initialize components
+config = Config()
+numbering = AntibodyNumbering(scheme='imgt')
+peptide_calc = PeptideDescriptorCalculator()
+calc = AntibodyDescriptorCalculator(config=config)
+
+# Define sequences
+HEAVY_SEQUENCE = "QVQLVQSGAEVKKPGASVKVSCKASGGTFSSYAISWVRQAPGQGLEWMGG..."
+LIGHT_SEQUENCE = "DIQMTQSPSSLSASVGDRVTITCRASHSISWLAWYQQKPGKAPKLLIY..."
+PDB_FILE = Path("data/test/test.pdb")
+
+# Run complete analysis
+df_heavy_final, df_light_final, df_final = desc_Ab(
+    HEAVY_SEQUENCE, 
+    LIGHT_SEQUENCE, 
+    PDB_FILE
+)
+
+# Export results
+df_final.to_csv("antibody_descriptors.csv", index=False)
+print(f"Total descriptors calculated: {df_final.shape[1]}")
+```
+
+### Example 2: Batch Processing
+
+```python
+# Process multiple antibodies
+antibodies = [
+    {"id": "Ab1", "heavy": "QVQLV...", "light": "DIQMT...", "pdb": "ab1.pdb"},
+    {"id": "Ab2", "heavy": "EVQLV...", "light": "EIVLT...", "pdb": "ab2.pdb"},
+]
+
+all_results = []
+for ab in antibodies:
+    df_h, df_l, df_final = desc_Ab(ab["heavy"], ab["light"], ab["pdb"])
+    df_final["antibody_id"] = ab["id"]
+    all_results.append(df_final)
+
+# Combine results
+combined_df = pd.concat(all_results, axis=0)
+combined_df.to_csv("batch_analysis.csv")
+```
+
+### Example 3: Custom Configuration
+
+```python
+# Custom configuration for specific analyses
+custom_config = Config.from_dict({
+    'pH': 7.4,
+    'numbering_scheme': 'kabat',
+    'verbose': True,
+    'calculate_dssp': True,
+    'calculate_propka': True,
+    'calculate_arpeggio': True,
+    'n_jobs': 4  # Parallel processing
+})
+
+calc = AntibodyDescriptorCalculator(config=custom_config)
 ```
 
 ## 🔬 API Reference
@@ -338,124 +340,97 @@ python -c "from AbXtract import Config; Config().check_external_tools()"
 ### Main Classes
 
 #### `AntibodyDescriptorCalculator`
-Main class for descriptor calculation.
-
 ```python
-calc = AntibodyDescriptorCalculator(
-    config=None,  # Configuration dict
-    verbose=True,  # Print progress
-    n_jobs=1,  # Parallel jobs
-    numbering_scheme='imgt'  # Numbering scheme
-)
+calc = AntibodyDescriptorCalculator(config=None)
+
+# Methods
+calc.calculate_sequence_descriptors(heavy_sequence, light_sequence, sequence_id)
+calc.calculate_structure_descriptors(heavy_sequence, light_sequence, pdb_file, structure_id)
 ```
 
 #### `Config`
-Configuration management for AbXtract.
-
 ```python
 config = Config(
-    calculate_sequence=True,
-    calculate_structure=True,
-    calculate_interactions=True,
-    dssp_path='/path/to/dssp',
-    freesasa_path='/path/to/freesasa'
+    pH=7.4,
+    numbering_scheme='imgt',  # imgt, kabat, chothia, martin, aho
+    calculate_liabilities=True,
+    calculate_bashour=True,
+    calculate_peptide=True,
+    calculate_protpy=True,
+    calculate_dssp=True,
+    calculate_propka=True,
+    calculate_arpeggio=True
 )
 ```
 
-#### `Visualizer`
-Visualization tools for analysis results.
-
+#### Analysis Functions
 ```python
-viz = Visualizer(
-    style='seaborn',
-    figsize=(10, 8),
-    dpi=100
-)
+from AbXtract.utils import analysis_descriptors
+
+# Create complete dataframes
+analysis_descriptors.create_complete_antibody_dataframe(...)
+analysis_descriptors.combine_all_results(...)
+analysis_descriptors.prepare_object_descriptors(df)
+
+# Visualization
+analysis_descriptors.plot_protein_properties(df, chain_type)
+analysis_descriptors.plot_ph_profiles(df, object_id)
+analysis_descriptors.plot_propka_properties(df, chain_type)
 ```
-
-### Key Methods
-
-- `calculate_sequence_descriptors()`: Extract sequence-based features
-- `calculate_structure_descriptors()`: Extract structure-based features
-- `calculate_all_descriptors()`: Calculate all available descriptors
-- `filter_descriptors()`: Select specific descriptor subsets
-- `normalize_descriptors()`: Normalize features for ML
 
 ## 👩‍💻 Development
 
+### Repository Structure
+```
+AbXtract/
+├── AbXtract/
+│   ├── __init__.py
+│   ├── core/           # Main calculation logic
+│   ├── sequence/       # Sequence analysis modules
+│   ├── structure/      # Structure analysis modules
+│   ├── utils/          # Utility functions
+│   └── data/           # Reference data and test files
+├── arpeggio/           # Arpeggio integration
+├── examples/           # Usage examples and notebooks
+├── tests/              # Unit tests
+├── docs/               # Documentation
+└── environment.yml     # Conda environment file
+```
+
 ### Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md).
-
-```bash
-# Fork and clone repository
-git clone https://github.com/yourusername/AbXtract.git
-cd AbXtract
-
-# Create development environment
-conda env create -f environment_dev.yml
-conda activate abxtract-dev
-
-# Install in development mode
-pip install -e .[dev,test,docs]
-
-# Run tests
-pytest tests/
-
-# Check code style
-flake8 AbXtract/
-black --check AbXtract/
-
-# Build documentation
-cd docs && make html
-```
-
-### Running Tests
-
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=AbXtract --cov-report=html
-
-# Run specific test
-pytest tests/test_descriptors.py::test_sequence_features
-```
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests: `pytest tests/`
+5. Submit a pull request
 
 ## 🔍 Troubleshooting
 
 ### Common Issues
 
-#### Import Error
-```bash
-# Solution: Reinstall in correct environment
-conda activate abxtract
-pip uninstall AbXtract
-pip install -e .
-```
-
 #### Missing External Tools
 ```python
-# Check and install missing tools
-from AbXtract import Config
+# Check which tools are missing
 config = Config()
-missing = config.check_external_tools()
-print(f"Missing tools: {[k for k,v in missing.items() if not v]}")
+tool_status = config.check_external_tools()
+missing = [k for k,v in tool_status.items() if not v]
+print(f"Missing tools: {missing}")
 ```
 
-#### Memory Issues
+#### Memory Issues with Large Datasets
 ```python
-# Use batch processing for large datasets
+# Use batch processing
 calc = AntibodyDescriptorCalculator(config={'batch_size': 100})
 ```
 
-### Getting Help
-
-- 📖 [Documentation](https://abxtract.readthedocs.io)
-- 💬 [GitHub Issues](https://github.com/pierrellompart-Servier/AbXtract/issues)
-- 🎯 [Discussions](https://github.com/pierrellompart-Servier/AbXtract/discussions)
-- 📧 Email: support@abxtract.org
+#### DSSP Failures
+```bash
+# Install DSSP via conda
+conda install -c conda-forge dssp
+# Or specify path
+config = Config(dssp_path='/path/to/mkdssp')
+```
 
 ## 📝 Citation
 
@@ -466,7 +441,6 @@ If you use AbXtract in your research, please cite:
   author = {Llompart, Pierre and Contributors},
   title = {AbXtract: Comprehensive Antibody Descriptor Analysis Toolkit},
   url = {https://github.com/pierrellompart-Servier/AbXtract},
-  version = {0.1.0},
   year = {2024},
   publisher = {GitHub},
   journal = {GitHub repository}
@@ -482,10 +456,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Servier Research Institute for supporting this project
 - The BioPython team for sequence handling tools
 - ANARCI developers for antibody numbering
-- All contributors and users of AbXtract
+- All contributors to the AbXtract project
 
 ---
 
-**Made with ❤️ by the AbXtract Team**
+**Repository**: https://github.com/pierrellompart-Servier/AbXtract
 
-*For more information, visit our [documentation](https://abxtract.readthedocs.io) or [contact us](mailto:support@abxtract.org).*
+**For questions or support, please open an issue on GitHub.**
