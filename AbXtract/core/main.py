@@ -4,6 +4,7 @@ Main module for antibody descriptor calculations.
 This module provides the central interface for computing both sequence-based
 and structure-based descriptors for antibodies and nanobodies.
 """
+import time
 
 import pandas as pd
 import numpy as np
@@ -166,7 +167,7 @@ class AntibodyDescriptorCalculator:
         #     liability_definitions_path=self.config.liability_definitions_path,
         #     restrict_species=self.config.restrict_species
         # )
-        
+        start_time = time.time()
         # Sequence-based calculators
         self.liability_analyzer = SequenceLiabilityAnalyzer(
             scheme=self.config.numbering_scheme,
@@ -237,6 +238,7 @@ class AntibodyDescriptorCalculator:
         self.dssp_analyzer = DSSPAnalyzer(
             dssp_path=self.config.dssp_path
         )
+        print("--- %s seconds --- INITIALIZATION" % (time.time() - start_time))
 
         
     def _check_dependencies(self):
@@ -320,7 +322,8 @@ class AntibodyDescriptorCalculator:
             'Heavy_Length': len(heavy_sequence) if heavy_sequence else 0,
             'Light_Length': len(light_sequence) if light_sequence else 0
         }
-        
+        start_time = time.time()
+
         # Calculate numbering
         if heavy_sequence or light_sequence:
             sequences_dict = {}
@@ -331,13 +334,15 @@ class AntibodyDescriptorCalculator:
 
             numbering_results = self.numbering.number_sequences(sequences_dict)
             results.update(numbering_results)
-    
+        print("--- %s seconds --- self.Calculate numbering" % (time.time() - start_time))
+
         # if heavy_sequence or light_sequence:
         #     numbering_results = self.numbering.number_sequences(
         #         heavy_sequence, light_sequence
         #     )
         #     results.update(numbering_results)
-        
+        start_time = time.time()
+
         # Calculate liabilities
         if self.config.calculate_liabilities:
             logger.info("  Calculating sequence liabilities...")
@@ -350,7 +355,11 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in liability analysis: {e}")
                 if self.config.verbose:
                     raise
-        
+                    
+        print("--- %s seconds --- self.config.calculate_liabilities" % (time.time() - start_time))
+
+        start_time = time.time()
+
         # Calculate Bashour descriptors
         if self.config.calculate_bashour:
             logger.info("  Calculating Bashour descriptors...")
@@ -367,7 +376,11 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in Bashour analysis: {e}")
                 if self.config.verbose:
                     raise
-        
+                    
+        print("--- %s seconds --- self.config.calculate_bashour" % (time.time() - start_time))
+
+        start_time = time.time()
+
         # Calculate peptide descriptors
         if self.config.calculate_peptide:
             logger.info("  Calculating peptide descriptors...")
@@ -380,7 +393,11 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in peptide analysis: {e}")
                 if self.config.verbose:
                     raise
-        
+    
+        print("--- %s seconds --- self.config.calculate_peptide" % (time.time() - start_time))
+
+        start_time = time.time()
+
         if self.config.calculate_protpy:
             logger.info("  Calculating ProtPy descriptors...")
             try:
@@ -392,6 +409,7 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in ProtPy analysis: {e}")
                 if self.config.verbose:
                     raise
+        print("--- %s seconds --- self.config.calculate_protpy" % (time.time() - start_time))
 
                 
         # Store results
@@ -400,9 +418,13 @@ class AntibodyDescriptorCalculator:
         # Format output
         df = pd.DataFrame([results])
         
+        for col in ["H", "L","Peptide_molar_extinction_reduced", "Peptide_molar_extinction_cystines"]:
+            try:
+                df = df.drop([col], axis = 1)
+            except:
+                pass
         
         
-        df = df.drop(["H", "L","Peptide_molar_extinction_reduced", "Peptide_molar_extinction_cystines"], axis = 1)
         # list of charge cols
         charge_cols = [f"Heavy_Charge_pH_{i}" for i in range(1, 15)]
 
@@ -452,7 +474,7 @@ class AntibodyDescriptorCalculator:
             # Filter to keep only key features
             for prefix in key_features:
                 if key.startswith(('Heavy_' + prefix, 'Light_' + prefix, 'Combined_' + prefix)):
-                    flat[f'ProtPy_{key}'] = value
+                    flat[f'ProtPy_{key}'] = self.extract_value(value)
                     break
 
         return flat
@@ -460,6 +482,7 @@ class AntibodyDescriptorCalculator:
 
     def _flatten_disulfide_results(self, disulfide_results: Dict) -> Dict:
         """Flatten disulfide bond results."""
+        print('disulfide_results', disulfide_results)
         return {
             'Free_Cysteines': disulfide_results.get('free_cys', 0),
             'Disulfide_Bonds': disulfide_results.get('cys_bridges', 0),
@@ -469,6 +492,7 @@ class AntibodyDescriptorCalculator:
 
     def _flatten_charge_dispersion_results(self, dispersion_results: Dict) -> Dict:
         """Flatten charge dispersion results."""
+        print('dispersion_results', dispersion_results)
         return {
             'Positive_Charge_Heterogeneity': dispersion_results.get('positive_charge_heterogeneity', 0),
             'Negative_Charge_Heterogeneity': dispersion_results.get('negative_charge_heterogeneity', 0),
@@ -590,6 +614,8 @@ class AntibodyDescriptorCalculator:
         #         if self.config.verbose:
         #             raise
 
+
+        start_time = time.time()
         # Calculate SASA and SAP
         if self.config.calculate_sasa:
             logger.info("  Calculating SASA and SAP...")
@@ -607,9 +633,11 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in SASA/SAP analysis: {e}")
                 if self.config.verbose:
                     raise
+        print("--- %s seconds --- Calculate SASA and SAP" % (time.time() - start_time))
 
 
-        
+        start_time = time.time()
+
         # Calculate charge properties
         if self.config.calculate_charge:
             logger.info("  Calculating charge distribution...")
@@ -620,6 +648,8 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in charge analysis: {e}")
                 if self.config.verbose:
                     raise
+        print("--- %s seconds --- Calculate charge properties" % (time.time() - start_time))
+        start_time = time.time()
 
         # Calculate disulfide bonds
         if self.config.calculate_disulfides:
@@ -631,6 +661,8 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in disulfide analysis: {e}")
                 if self.config.verbose:
                     raise
+        print("--- %s seconds --- Calculate disulfide bonds" % (time.time() - start_time))
+        start_time = time.time()
 
         # Calculate charge dispersion
         if self.config.calculate_charge_dispersion:
@@ -642,6 +674,8 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in charge dispersion analysis: {e}")
                 if self.config.verbose:
                     raise
+        print("--- %s seconds --- Calculate charge dispersion" % (time.time() - start_time))
+        start_time = time.time()
 
         # Extended SASA analysis
         if self.config.calculate_extended_sasa:
@@ -653,8 +687,10 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in extended SASA analysis: {e}")
                 if self.config.verbose:
                     raise
+        print("--- %s seconds --- Extended SASA analysis" % (time.time() - start_time))
 
 
+        start_time = time.time()
 
         # Run DSSP
         if self.config.calculate_dssp:
@@ -666,7 +702,9 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in DSSP analysis: {e}")
                 if self.config.verbose:
                     raise
-        
+        print("--- %s seconds --- Run DSSP" % (time.time() - start_time))
+        start_time = time.time()
+
         # Run PROPKA
         # if self.config.calculate_propka:
         #     logger.info("  Running PROPKA analysis...")
@@ -726,6 +764,8 @@ class AntibodyDescriptorCalculator:
                 # Add stability metrics
                 stability = self.extended_propka_analyzer.calculate_stability_metrics(pka_file)
                 results.update({f'stability_{k}': v for k, v in stability.items()})
+        print("--- %s seconds --- Run Extended PROPKA" % (time.time() - start_time))
+        start_time = time.time()
 
         # Run computeProper
         if self.config.calculate_proper:
@@ -739,6 +779,12 @@ class AntibodyDescriptorCalculator:
                         HC=heavy_sequence,
                         LC=light_sequence
                         )
+        else:
+            df_AA = pd.DataFrame()
+            df_Ab = pd.DataFrame()
+
+        print("--- %s seconds --- Run computeProper" % (time.time() - start_time))
+        start_time = time.time()
 
         # Run Arpeggio
         if self.config.calculate_arpeggio:
@@ -750,14 +796,17 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in Arpeggio analysis: {e}")
                 if self.config.verbose:
                     raise
-        
+        print("--- %s seconds --- Run Arpeggio" % (time.time() - start_time))
+        start_time = time.time()
+
         # Calculate developability index if both SAP and charge available
         if 'SAP_score' in results and 'Folded_charge_pH7' in results:
             results['DI_score'] = self._calculate_developability_index(
                 results['SAP_score'],
                 results['Folded_charge_pH7']
             )
-        
+        print("--- %s seconds --- Calculate developability index" % (time.time() - start_time))
+
         # Store results
         self.results['structure'] = results
         
@@ -792,6 +841,8 @@ class AntibodyDescriptorCalculator:
         
         if return_details:
         	return structure_results_seq, structure_results_comp, df_residues, results
+        
+            
         return structure_results_seq, structure_results_comp, df_residues, df_AA, df_Ab
     
 

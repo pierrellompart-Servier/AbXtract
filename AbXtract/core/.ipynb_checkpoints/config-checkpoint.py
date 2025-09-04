@@ -130,15 +130,15 @@ class Config:
     # Analysis selection flags
     calculate_liabilities: bool = True
     calculate_bashour: bool = True
-    calculate_peptide: bool = True
-    calculate_protpy: bool = False
+    calculate_peptide: bool = True # 20-30 sec
+    calculate_protpy: bool = True # 7 sec 
     calculate_sasa: bool = True
     calculate_charge: bool = True
     calculate_dssp: bool = True
     calculate_propka: bool = True
     calculate_arpeggio: bool = True
     calculate_cdr_properties: bool = True
-    calculate_proper: bool = True
+    calculate_proper: bool = True # 30-40 sec
     
     # Advanced parameters
     max_iterations: int = 1000

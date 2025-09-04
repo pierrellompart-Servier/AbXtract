@@ -295,17 +295,47 @@ class PropkaAnalyzer:
         pi_folded = float(pi_match.group(1)) if pi_match else None
         pi_unfolded = float(pi_match.group(2)) if pi_match else None
 
-        # Parse Free energy data - only at specific pH points (0, 1, 2, etc.)
-        free_energy_dict = {}
-        free_energy_section = re.search(r'Free energy of\s+folding.*?\n((?:\s*[\d.]+\s+[\d.-]+\n)+)', content, re.DOTALL)
-        if free_energy_section:
-            for line in free_energy_section.group(1).strip().split('\n'):
-                parts = line.strip().split()
-                if len(parts) == 2:
-                    ph = float(parts[0])
-                    energy = float(parts[1])
-                    free_energy_dict[ph] = energy
+        # # Parse Free energy data - only at specific pH points (0, 1, 2, etc.)
+        # free_energy_dict = {}
+        # print('content', content)
+        # free_energy_section = re.search(r'Free energy of\s+folding.*?\n((?:\s*[\d.]+\s+[\d.-]+\n)+)', content, re.DOTALL)
+        # if free_energy_section:
+        #     for line in free_energy_section.group(1).strip().split('\n'):
+        #         parts = line.strip().split()
+        #         if len(parts) == 2:
+        #             ph = float(parts[0])
+        #             energy = float(parts[1])
+        #             free_energy_dict[ph] = energy
+        # print("free_energy_dict")
 
+
+    
+        # Parse Free energy data
+        free_energy_dict = {}
+        rec = False
+
+        # Split content into lines for line-by-line processing
+        for row_k in content.split('\n'):  # Fixed: need to split content into lines
+            spl_row = row_k.strip().split()
+
+            if row_k.startswith('Free energy of'):  # Fixed: startswith not startsith
+                rec = True
+                continue
+
+            if row_k.startswith('The pH'):  # Fixed: startswith not startsith
+                rec = False
+                continue
+
+            if len(spl_row) == 2 and rec == True:
+                try:
+                    ph_value = float(spl_row[0])  # Fixed: better variable name
+                    energy_value = float(spl_row[1])  # Fixed: float not foat
+                    free_energy_dict[ph_value] = energy_value
+                except ValueError:
+                    # Skip lines that don't have valid float values
+                    continue
+
+        
         # Parse Protein charge data - available at all 0.1 pH increments
         charge_dict = {'folded': {}, 'unfolded': {}}
         charge_section = re.search(r'Protein charge of folded and unfolded.*?\n\s*pH\s+unfolded\s+folded\n((?:\s*[\d.]+\s+[\d.-]+\s+[\d.-]+\n)+)', content, re.DOTALL)
@@ -408,6 +438,7 @@ class PropkaAnalyzer:
                     res_num = int(match.group(2))
                     chain = match.group(3)
                     pka = float(match.group(4))
+                    BURIED = float(match.group(5))
 
                     # Only add if not already in the list
                     if (res_type, res_num, chain) not in existing_residues:
@@ -417,7 +448,7 @@ class PropkaAnalyzer:
                             'Residue_Number': res_num,
                             'Chain': chain,
                             'pKa': pka,
-                            'BURIED': None,
+                            'BURIED': BURIED,
                             'REGULAR': None,
                             'RE': None
                         }
@@ -476,7 +507,7 @@ class PropkaAnalyzer:
         for col in df_res_comp.columns.tolist()[3:]:
             df_residues[col] = df_res_comp[col]
 
-        df_residues_ka = df_residues.drop( ["BURIED", "REGULAR", "RE"], axis =1) 
+        df_residues_ka = df_residues# .drop( ["BURIED", "REGULAR", "RE"], axis =1) 
 
 
 
