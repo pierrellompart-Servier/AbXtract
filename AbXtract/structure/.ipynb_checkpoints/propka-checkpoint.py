@@ -314,6 +314,7 @@ class PropkaAnalyzer:
         free_energy_dict = {}
         rec = False
 
+        print('content',content)
         # Split content into lines for line-by-line processing
         for row_k in content.split('\n'):  # Fixed: need to split content into lines
             spl_row = row_k.strip().split()
