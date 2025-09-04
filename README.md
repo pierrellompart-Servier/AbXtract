@@ -29,13 +29,9 @@
 - [Core Modules](#-core-modules)
 - [Usage Examples](#-usage-examples)
 - [Descriptor Categories](#-descriptor-categories)
-- [Visualization](#-visualization)
 - [Environment Management](#-environment-management)
 - [External Tools](#-external-tools)
-- [API Reference](#-api-reference)
-- [Development](#-development)
-- [Troubleshooting](#-troubleshooting)
-- [Citation](#-citation)
+
 
 ## 🚀 Installation
 
@@ -79,11 +75,6 @@ cd AbXtract
 
 # Install in development mode
 pip install -e .
-```
-
-#### Method 2: PyPI Installation (when available)
-```bash
-pip install AbXtract
 ```
 
 ## ⚡ Quick Start
@@ -151,7 +142,7 @@ print(f"Antibody-level descriptors: {df_Ab.shape}")
 
 ## 📊 Descriptor Categories
 
-### 1. Sequence-Based Descriptors (5,000+)
+### 1. Sequence-Based Descriptors
 - Amino acid composition and properties
 - Hydrophobicity profiles (multiple scales)
 - Charge distribution patterns
@@ -159,7 +150,7 @@ print(f"Antibody-level descriptors: {df_Ab.shape}")
 - CDR-specific features
 - Peptide descriptors for all k-mers
 
-### 2. Structure-Based Descriptors (10,000+)
+### 2. Structure-Based Descriptors
 - Per-residue SASA and burial
 - Secondary structure elements
 - Interaction networks
@@ -167,7 +158,7 @@ print(f"Antibody-level descriptors: {df_Ab.shape}")
 - Charge patches
 - pH-dependent properties
 
-### 3. Physicochemical Properties (1,000+)
+### 3. Physicochemical Properties
 - Molecular weight and pI
 - Instability and aliphatic indices
 - GRAVY scores
@@ -175,7 +166,7 @@ print(f"Antibody-level descriptors: {df_Ab.shape}")
 - Dipole moments
 - Electrostatic properties
 
-### 4. Liability Features (50+)
+### 4. Liability Features
 - Post-translational modifications
   - N-glycosylation sites
   - Deamidation hotspots
@@ -185,7 +176,7 @@ print(f"Antibody-level descriptors: {df_Ab.shape}")
 - Immunogenicity motifs
 - Polyreactivity signatures
 
-### 5. pH-Dependent Properties (141 pH points)
+### 5. pH-Dependent Properties
 - Charge profiles
 - Folded/unfolded states
 - Free energy changes
@@ -335,18 +326,6 @@ custom_config = Config.from_dict({
 calc = AntibodyDescriptorCalculator(config=custom_config)
 ```
 
-## 🔬 API Reference
-
-### Main Classes
-
-#### `AntibodyDescriptorCalculator`
-```python
-calc = AntibodyDescriptorCalculator(config=None)
-
-# Methods
-calc.calculate_sequence_descriptors(heavy_sequence, light_sequence, sequence_id)
-calc.calculate_structure_descriptors(heavy_sequence, light_sequence, pdb_file, structure_id)
-```
 
 #### `Config`
 ```python
@@ -363,20 +342,6 @@ config = Config(
 )
 ```
 
-#### Analysis Functions
-```python
-from AbXtract.utils import analysis_descriptors
-
-# Create complete dataframes
-analysis_descriptors.create_complete_antibody_dataframe(...)
-analysis_descriptors.combine_all_results(...)
-analysis_descriptors.prepare_object_descriptors(df)
-
-# Visualization
-analysis_descriptors.plot_protein_properties(df, chain_type)
-analysis_descriptors.plot_ph_profiles(df, object_id)
-analysis_descriptors.plot_propka_properties(df, chain_type)
-```
 
 ## 👩‍💻 Development
 
@@ -397,69 +362,3 @@ AbXtract/
 └── environment.yml     # Conda environment file
 ```
 
-### Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests: `pytest tests/`
-5. Submit a pull request
-
-## 🔍 Troubleshooting
-
-### Common Issues
-
-#### Missing External Tools
-```python
-# Check which tools are missing
-config = Config()
-tool_status = config.check_external_tools()
-missing = [k for k,v in tool_status.items() if not v]
-print(f"Missing tools: {missing}")
-```
-
-#### Memory Issues with Large Datasets
-```python
-# Use batch processing
-calc = AntibodyDescriptorCalculator(config={'batch_size': 100})
-```
-
-#### DSSP Failures
-```bash
-# Install DSSP via conda
-conda install -c conda-forge dssp
-# Or specify path
-config = Config(dssp_path='/path/to/mkdssp')
-```
-
-## 📝 Citation
-
-If you use AbXtract in your research, please cite:
-
-```bibtex
-@software{abxtract2024,
-  author = {Llompart, Pierre and Contributors},
-  title = {AbXtract: Comprehensive Antibody Descriptor Analysis Toolkit},
-  url = {https://github.com/pierrellompart-Servier/AbXtract},
-  year = {2024},
-  publisher = {GitHub},
-  journal = {GitHub repository}
-}
-```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Servier Research Institute for supporting this project
-- The BioPython team for sequence handling tools
-- ANARCI developers for antibody numbering
-- All contributors to the AbXtract project
-
----
-
-**Repository**: https://github.com/pierrellompart-Servier/AbXtract
-
-**For questions or support, please open an issue on GitHub.**
