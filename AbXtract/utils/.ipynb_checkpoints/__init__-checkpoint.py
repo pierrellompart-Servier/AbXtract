@@ -71,6 +71,26 @@ from .converters import (
     format_results
 )
 
+from .analysis_descriptors import (
+add_residue_sasa_sum_column,
+create_complete_antibody_dataframe,
+complete_peptide_results,
+combine_all_results,
+plot_protein_properties,
+plot_key_properties,
+standardize_ph_value,
+reshape_dataframe_by_object,
+plot_ph_profiles,
+plot_all_objects,
+display_results,
+get_object_dataframe,
+rename_columns_heavy_light,
+prepare_object_descriptors,
+plot_protein_properties_with_propka,
+plot_propka_properties
+    
+)
+
 # Add the missing functions that are imported in core/main.py
 def parse_sequence(sequence_input) -> str:
     """Parse sequence from various input formats."""
