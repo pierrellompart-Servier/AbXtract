@@ -1,508 +1,491 @@
-# AbXtract Installation Guide
+# AbXtract - Comprehensive Antibody Descriptor Analysis Toolkit
 
 [![PyPI version](https://badge.fury.io/py/AbXtract.svg)](https://badge.fury.io/py/AbXtract)
 [![Python Version](https://img.shields.io/pypi/pyversions/AbXtract)](https://pypi.org/project/AbXtract/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Documentation Status](https://readthedocs.org/projects/abxtract/badge/?version=latest)](https://abxtract.readthedocs.io)
 
-Complete installation guide for **AbXtract** - the comprehensive antibody descriptor analysis toolkit.
+**AbXtract** is a comprehensive Python toolkit for extracting and analyzing antibody descriptors from sequences and structures. It provides a unified interface for calculating hundreds of physicochemical, structural, and sequence-based features for antibody characterization and machine learning applications.
+
+## 🎯 Key Features
+
+- **📊 Comprehensive Descriptor Calculation**: Extract 500+ descriptors from antibody sequences and structures
+- **🔬 Multi-level Analysis**: Sequence, structure, and interaction-based features
+- **⚡ High Performance**: Parallel processing and optimized algorithms
+- **🧬 Antibody-Specific**: Specialized features for VH/VL domains and CDR regions
+- **🔧 Flexible Integration**: Easy integration with ML pipelines
+- **📈 Visualization Tools**: Built-in plotting and analysis functions
+- **🐳 Docker Support**: Containerized deployment for reproducibility
 
 ## 📋 Table of Contents
 
-- [System Requirements](#system-requirements)
-- [Installation Methods](#installation-methods)
-- [External Tools Setup](#external-tools-setup)
-- [Verification](#verification)
-- [Troubleshooting](#troubleshooting)
-- [Getting Started](#getting-started)
+- [Installation](#-installation)
+- [Quick Start](#-quick-start)
+- [Features](#-features)
+- [Usage Examples](#-usage-examples)
+- [API Reference](#-api-reference)
+- [Environment Management](#-environment-management)
+- [External Tools](#-external-tools)
+- [Development](#-development)
+- [Troubleshooting](#-troubleshooting)
+- [Citation](#-citation)
+- [License](#-license)
 
-## 🖥️ System Requirements
+## 🚀 Installation
 
-### Minimum Requirements
-- **Python**: 3.8 or higher
-- **Operating System**: Windows, macOS, or Linux
-- **Memory**: 4GB RAM (8GB+ recommended)
-- **Disk Space**: 2GB free space
-- **Internet**: Required for installation and external tool downloads
-
-### Recommended Requirements
-- **Python**: 3.9 or 3.10
-- **Memory**: 16GB+ RAM for large protein structures
-- **CPU**: Multi-core processor (4+ cores recommended)
-- **GPU**: Optional, for accelerated calculations
-
-### Supported Platforms
-- ✅ **Linux** (Ubuntu 18.04+, CentOS 7+, Fedora 30+)
-- ✅ **macOS** (10.14+, including Apple Silicon M1/M2)
-- ✅ **Windows** (10+, Windows 11)
-- 🐳 **Docker** (all platforms)
-
-## 🚀 Installation Methods
-
-### Method 1: PyPI Installation (Recommended)
-
-The simplest way to install AbXtract:
+### Quick Install via Conda Environment (Recommended)
 
 ```bash
-# Install latest stable version
-pip install AbXtract
+# Download the environment file
+wget https://github.com/pierrellompart-Servier/AbXtract/raw/main/environment.yml
 
-# Install with all optional dependencies
-pip install AbXtract[all]
-
-# Install specific extras
-pip install AbXtract[dev,viz,docs]
-```
-
-### Method 2: Conda Installation (Recommended for Bioinformatics)
-
-Using conda provides better handling of bioinformatics dependencies:
-
-```bash
-# Create and activate conda environment
-conda create -n abxtract python=3.9
+# Create and activate environment
+conda env create -f environment.yml
 conda activate abxtract
 
-# Install from conda-forge (when available)
-conda install -c conda-forge abxtract
+# Verify installation
+python -c "import AbXtract; print(f'AbXtract v{AbXtract.__version__} ready!')"
+```
 
-# Or install via pip in conda environment
+### Alternative Installation Methods
+
+#### Method 1: PyPI Installation
+```bash
+# Basic installation
+pip install AbXtract
+
+# With all optional dependencies
 pip install AbXtract[all]
 ```
 
-### Method 3: Development Installation
-
-For contributors and advanced users:
-
+#### Method 2: Development Installation
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/AbXtract.git
+# Clone repository
+git clone https://github.com/pierrellompart-Servier/AbXtract.git
 cd AbXtract
 
 # Install in development mode
 pip install -e .[dev,docs,viz]
-
-# Install pre-commit hooks
-pre-commit install
 ```
 
-### Method 4: Docker Installation
-
-Containerized installation for reproducible environments:
-
+#### Method 3: Docker Installation
 ```bash
-# Pull Docker image
+# Pull and run Docker image
 docker pull abxtract/abxtract:latest
-
-# Run container with Jupyter
-docker run -p 8888:8888 abxtract/abxtract:latest
-
-# Run container interactively
-docker run -it --rm abxtract/abxtract:latest bash
+docker run -it abxtract/abxtract:latest
 ```
 
-### Method 5: Environment File Installation
+## ⚡ Quick Start
 
-Using the provided environment file:
-
-```bash
-# Download environment file
-wget https://raw.githubusercontent.com/yourusername/AbXtract/main/environment.yml
-
-# Create environment
-conda env create -f environment.yml
-
-# Activate environment
-conda activate abxtract
-```
-
-## 🔧 External Tools Setup
-
-AbXtract integrates with several external computational biology tools. While the core functionality works without these, installing them enables additional analyses.
-
-### Essential Tools
-
-#### 1. DSSP (Secondary Structure Assignment)
-```bash
-# Via conda (recommended)
-conda install -c conda-forge dssp
-
-# Manual installation
-# Download from: https://swift.cmbi.umcn.nl/gv/dssp/
-# Follow platform-specific instructions
-```
-
-#### 2. PROPKA (pKa Prediction)
-```bash
-# Via pip
-pip install propka
-
-# Verify installation
-propka --version
-```
-
-#### 2. ANARCI
-```bash
-conda install -c conda-forge biopython -y
-conda install -c bioconda hmmer=3.3.2 -y
-cd ANARCI
-python setup.py install
-```
-
-#### 3. FreeSASA (Solvent Accessibility)
-```bash
-# Usually installed with pip requirements
-# If issues occur, install via conda:
-conda install -c conda-forge freesasa
-```
-
-### Optional Tools
-
-#### 4. Arpeggio (Interaction Analysis)
-```bash
-# Clone and install
-git clone https://github.com/PDBeurope/arpeggio.git
-cd arpeggio
-pip install .
-
-# Add to PATH
-export PATH=$PATH:$(pwd)
-```
-
-### OpenBabel
-
-```bash
-# Check what's actually installed
-conda list | grep openbabel
-ldd /opt/conda/envs/abxtract/lib/python3.9/site-packages/openbabel/_openbabel.so
-
-# Force reinstall with specific versions that work together
-conda uninstall openbabel --force
-conda clean --all
-conda install -c conda-forge openbabel=3.1.1 python=3.9
-
-# Test if it works
-python -c "from openbabel import openbabel; print('OpenBabel loaded successfully')"```
-
-
-#### 5. Reduce (Hydrogen Addition)
-```bash
-# Download from Duke University
-wget http://kinemage.biochem.duke.edu/downloads/software/reduce/reduce.3.23.130521.src.tgz
-tar -xzf reduce.3.23.130521.src.tgz
-cd reduce_src/
-make
-
-# Add to PATH
-export PATH=$PATH:$(pwd)
-```
-
-#### 6. MUSCLE (Sequence Alignment)
-```bash
-# Via conda
-conda install -c bioconda muscle
-
-# Via direct download
-wget https://www.drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86linux64.tar.gz
-tar -xzf muscle3.8.31_i86linux64.tar.gz
-sudo cp muscle3.8.31_i86linux64 /usr/local/bin/muscle
-```
-
-### Tool Verification
-
-Check which tools are available:
-
-```python
-from AbXtract import Config
-
-config = Config()
-tool_status = config.check_external_tools()
-
-for tool, available in tool_status.items():
-    print(f"{tool}: {'✅ Available' if available else '❌ Not found'}")
-```
-
-## ✅ Verification
-
-### 1. Basic Installation Check
-
-```bash
-# Check Python can import AbXtract
-python -c "import AbXtract; print(f'AbXtract v{AbXtract.__version__} installed successfully!')"
-
-# Check CLI is available
-abxtract --version
-
-# Alternative CLI name
-antibody-descriptors --version
-```
-
-### 2. Run Installation Validation
-
-```bash
-# Clone repository for test scripts
-git clone https://github.com/yourusername/AbXtract.git
-cd AbXtract
-
-# Run validation script
-python examples/test_abxtract_simple.py
-
-# Run with make
-make validate-installation
-```
-
-### 3. Test Core Functionality
+### Basic Usage
 
 ```python
 from AbXtract import AntibodyDescriptorCalculator
 
-# Test sequence analysis
+# Initialize calculator
 calc = AntibodyDescriptorCalculator()
+
+# Calculate descriptors from sequences
 results = calc.calculate_sequence_descriptors(
-    heavy_sequence="QVQLVQSGAEVKKPGASVKVSCKASGGTFSS",
-    light_sequence="DIQMTQSPSSLSASVGDRVTITCRASHSI"
+    heavy_sequence="QVQLVQSGAEVKKPGASVKVSCKASGGTFSSYAISWVRQAPGQGLEWMGG",
+    light_sequence="DIQMTQSPSSLSASVGDRVTITCRASHSISWLAWYQQKPGKAPKLLIY"
 )
 
-print(f"✅ Calculated {len(results.columns)} descriptors!")
+print(f"Calculated {len(results.columns)} descriptors")
+print(results.head())
 ```
 
-### 4. Interactive Test
+### Structure-Based Analysis
+
+```python
+# Calculate descriptors from PDB structure
+results = calc.calculate_structure_descriptors(
+    pdb_file="antibody.pdb",
+    heavy_chain="H",
+    light_chain="L"
+)
+
+# Access specific descriptor categories
+sequence_features = results.filter(regex='sequence_')
+structural_features = results.filter(regex='structure_')
+cdr_features = results.filter(regex='cdr_')
+```
+
+### Command-Line Interface
 
 ```bash
-# Start Jupyter notebook
-jupyter notebook examples/AbXtract_Complete_Testing.ipynb
+# Basic sequence analysis
+abxtract analyze --heavy QVQLVQSG... --light DIQMTQSP... -o results.csv
 
-# Or use the simple test script
-python examples/test_abxtract_simple.py --help
+# Structure analysis
+abxtract analyze --pdb antibody.pdb --heavy-chain H --light-chain L
+
+# Batch processing
+abxtract batch --input sequences.fasta --output descriptors/ --parallel 4
 ```
 
-## 🔧 Troubleshooting
+## 🔬 Features
+
+### Descriptor Categories
+
+#### 1. **Sequence-Based Descriptors**
+- Amino acid composition and properties
+- Hydrophobicity profiles
+- Charge distribution
+- Sequence motifs and patterns
+- CDR length and composition
+
+#### 2. **Structure-Based Descriptors**
+- Secondary structure elements
+- Solvent accessibility (SASA)
+- Radius of gyration
+- B-factors and flexibility
+- Structural compactness
+
+#### 3. **Physicochemical Properties**
+- Molecular weight and pI
+- Instability index
+- Aliphatic index
+- GRAVY score
+- Extinction coefficients
+
+#### 4. **Interaction Features**
+- Hydrogen bonds
+- Salt bridges
+- Disulfide bonds
+- Aromatic interactions
+- VH-VL interface properties
+
+#### 5. **CDR-Specific Features**
+- CDR canonical classes
+- Loop geometry
+- Residue preferences
+- Structural variability
+- Paratope predictions
+
+### Supported Numbering Schemes
+- **IMGT**: Standard IMGT numbering
+- **Kabat**: Classical Kabat scheme
+- **Chothia**: Structural numbering
+- **Martin**: Enhanced Chothia
+- **AHo**: Aho numbering scheme
+
+## 📖 Usage Examples
+
+### Example 1: Batch Processing Multiple Sequences
+
+```python
+import pandas as pd
+from AbXtract import AntibodyDescriptorCalculator
+
+# Load sequences
+sequences = pd.read_csv("antibody_sequences.csv")
+
+# Initialize calculator with custom config
+calc = AntibodyDescriptorCalculator(
+    config={
+        'n_jobs': 4,  # Parallel processing
+        'calculate_structure': False,  # Skip structure features
+        'numbering_scheme': 'imgt'  # Use IMGT numbering
+    }
+)
+
+# Process all sequences
+all_descriptors = []
+for idx, row in sequences.iterrows():
+    descriptors = calc.calculate_sequence_descriptors(
+        heavy_sequence=row['VH'],
+        light_sequence=row['VL'],
+        sequence_id=row['ID']
+    )
+    all_descriptors.append(descriptors)
+
+# Combine results
+results_df = pd.concat(all_descriptors)
+results_df.to_csv("antibody_descriptors.csv", index=False)
+```
+
+### Example 2: Structure Analysis with Visualization
+
+```python
+from AbXtract import AntibodyDescriptorCalculator, Visualizer
+
+# Calculate structural descriptors
+calc = AntibodyDescriptorCalculator()
+results = calc.calculate_structure_descriptors(
+    pdb_file="1igm.pdb",
+    heavy_chain="H",
+    light_chain="L",
+    include_interactions=True
+)
+
+# Visualize results
+viz = Visualizer()
+
+# Plot hydrophobicity surface
+viz.plot_hydrophobicity_surface(results)
+
+# CDR interaction network
+viz.plot_cdr_interactions(results)
+
+# Save report
+viz.generate_report(results, output="antibody_analysis_report.html")
+```
+
+### Example 3: Machine Learning Pipeline Integration
+
+```python
+from AbXtract import AntibodyDescriptorCalculator
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+import pandas as pd
+
+# Load data
+data = pd.read_csv("antibody_affinity_data.csv")
+
+# Calculate descriptors
+calc = AntibodyDescriptorCalculator()
+X = []
+for idx, row in data.iterrows():
+    descriptors = calc.calculate_sequence_descriptors(
+        heavy_sequence=row['VH'],
+        light_sequence=row['VL']
+    )
+    X.append(descriptors)
+
+X = pd.DataFrame(X)
+y = data['affinity_nM']
+
+# Train model
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+model = RandomForestRegressor(n_estimators=100)
+model.fit(X_train, y_train)
+
+# Feature importance
+feature_importance = pd.DataFrame({
+    'feature': X.columns,
+    'importance': model.feature_importances_
+}).sort_values('importance', ascending=False)
+
+print("Top 10 important features:")
+print(feature_importance.head(10))
+```
+
+## 🔧 Environment Management
+
+### Saving Your Environment
+
+If you've successfully set up AbXtract and want to share your environment:
+
+```bash
+# Method 1: Quick export
+conda activate abxtract
+conda env export > abxtract_environment.yml
+
+# Method 2: Cross-platform export
+conda env export --no-builds > abxtract_environment_crossplatform.yml
+
+# Method 3: Use our export script
+python export_env.py
+```
+
+### Installing from Environment File
+
+```bash
+# Create environment from file
+conda env create -f abxtract_environment.yml
+
+# Activate environment
+conda activate abxtract
+
+# Update existing environment
+conda env update -f abxtract_environment.yml --prune
+```
+
+## 🛠️ External Tools
+
+AbXtract integrates with several external tools for enhanced functionality:
+
+### Required Tools
+- **ANARCI**: Antibody numbering (installed automatically)
+- **DSSP**: Secondary structure assignment
+- **FreeSASA**: Solvent accessibility calculations
+- **BioPython**: Sequence manipulation
+
+### Optional Tools
+- **PROPKA**: pKa predictions
+- **Arpeggio**: Interaction analysis
+- **Reduce**: Hydrogen addition
+- **MUSCLE**: Sequence alignment
+- **OpenBabel**: Molecular conversions
+
+### Installing External Tools
+
+```bash
+# Via conda (recommended)
+conda install -c conda-forge dssp freesasa propka
+
+# ANARCI setup
+pip install anarci
+python -c "import anarci; anarci.setup()"
+
+# Verify tools
+python -c "from AbXtract import Config; Config().check_external_tools()"
+```
+
+## 🔬 API Reference
+
+### Main Classes
+
+#### `AntibodyDescriptorCalculator`
+Main class for descriptor calculation.
+
+```python
+calc = AntibodyDescriptorCalculator(
+    config=None,  # Configuration dict
+    verbose=True,  # Print progress
+    n_jobs=1,  # Parallel jobs
+    numbering_scheme='imgt'  # Numbering scheme
+)
+```
+
+#### `Config`
+Configuration management for AbXtract.
+
+```python
+config = Config(
+    calculate_sequence=True,
+    calculate_structure=True,
+    calculate_interactions=True,
+    dssp_path='/path/to/dssp',
+    freesasa_path='/path/to/freesasa'
+)
+```
+
+#### `Visualizer`
+Visualization tools for analysis results.
+
+```python
+viz = Visualizer(
+    style='seaborn',
+    figsize=(10, 8),
+    dpi=100
+)
+```
+
+### Key Methods
+
+- `calculate_sequence_descriptors()`: Extract sequence-based features
+- `calculate_structure_descriptors()`: Extract structure-based features
+- `calculate_all_descriptors()`: Calculate all available descriptors
+- `filter_descriptors()`: Select specific descriptor subsets
+- `normalize_descriptors()`: Normalize features for ML
+
+## 👩‍💻 Development
+
+### Contributing
+
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md).
+
+```bash
+# Fork and clone repository
+git clone https://github.com/yourusername/AbXtract.git
+cd AbXtract
+
+# Create development environment
+conda env create -f environment_dev.yml
+conda activate abxtract-dev
+
+# Install in development mode
+pip install -e .[dev,test,docs]
+
+# Run tests
+pytest tests/
+
+# Check code style
+flake8 AbXtract/
+black --check AbXtract/
+
+# Build documentation
+cd docs && make html
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=AbXtract --cov-report=html
+
+# Run specific test
+pytest tests/test_descriptors.py::test_sequence_features
+```
+
+## 🔍 Troubleshooting
 
 ### Common Issues
 
-#### 1. Installation Failures
-
-**Problem**: `pip install AbXtract` fails with dependency conflicts
+#### Import Error
 ```bash
-# Solution: Use fresh environment
-python -m venv abxtract_env
-source abxtract_env/bin/activate  # Linux/Mac
-# or
-abxtract_env\Scripts\activate     # Windows
-pip install --upgrade pip setuptools wheel
-pip install AbXtract
-```
-
-**Problem**: Conda installation conflicts
-```bash
-# Solution: Create isolated environment
-conda create -n abxtract python=3.9
+# Solution: Reinstall in correct environment
 conda activate abxtract
-pip install AbXtract[all]
-```
-
-#### 2. External Tool Issues
-
-**Problem**: DSSP not found
-```bash
-# Check if DSSP is in PATH
-which dssp
-
-# If not found, install via conda
-conda install -c conda-forge dssp
-
-# Or specify path in config
-from AbXtract import Config
-config = Config(dssp_path='/path/to/dssp')
-```
-
-**Problem**: ANARCI/antibody numbering failures
-```bash
-# Install ANARCI
-pip install anarci
-
-# Setup ANARCI database
-anarci --setup
-
-# If still issues, disable numbering-dependent features
-config = Config(calculate_numbering=False)
-```
-
-#### 3. Import Errors
-
-**Problem**: `ImportError: No module named 'AbXtract'`
-```bash
-# Check installation
-pip list | grep -i abxtract
-
-# Reinstall if needed
 pip uninstall AbXtract
-pip install AbXtract
+pip install -e .
 ```
 
-**Problem**: Missing dependencies
-```bash
-# Install all optional dependencies
-pip install AbXtract[all]
-
-# Or install specific missing packages
-pip install package_name
-```
-
-#### 4. Performance Issues
-
-**Problem**: Slow calculations
+#### Missing External Tools
 ```python
-# Use multiprocessing
+# Check and install missing tools
 from AbXtract import Config
-config = Config(n_jobs=4)  # Use 4 cores
-calc = AntibodyDescriptorCalculator(config=config)
+config = Config()
+missing = config.check_external_tools()
+print(f"Missing tools: {[k for k,v in missing.items() if not v]}")
 ```
 
-**Problem**: Memory errors with large proteins
+#### Memory Issues
 ```python
-# Disable memory-intensive analyses
-config = Config(
-    calculate_arpeggio=False,  # Can be memory intensive
-    calculate_peptide=False    # Many descriptors
-)
-```
-
-#### 5. Platform-Specific Issues
-
-**macOS**: Xcode tools required for some compilations
-```bash
-xcode-select --install
-```
-
-**Windows**: Visual Studio Build Tools may be needed
-```bash
-# Download from Microsoft and install:
-# https://visualstudio.microsoft.com/visual-cpp-build-tools/
-```
-
-**Linux**: System dependencies might be missing
-```bash
-# Ubuntu/Debian
-sudo apt-get update
-sudo apt-get install build-essential python3-dev
-
-# CentOS/RHEL
-sudo yum groupinstall "Development Tools"
-sudo yum install python3-devel
+# Use batch processing for large datasets
+calc = AntibodyDescriptorCalculator(config={'batch_size': 100})
 ```
 
 ### Getting Help
 
-If you encounter issues:
-
-1. **Check the documentation**: https://abxtract.readthedocs.io
-2. **Search existing issues**: https://github.com/yourusername/AbXtract/issues
-3. **Create new issue**: Include error messages, Python version, and OS
-4. **Join discussions**: https://github.com/yourusername/AbXtract/discussions
-
-### Diagnostic Information
-
-Include this information when reporting issues:
-
-```python
-import sys
-import platform
-import AbXtract
-
-print("System Information:")
-print(f"  Python: {sys.version}")
-print(f"  Platform: {platform.platform()}")
-print(f"  AbXtract: {AbXtract.__version__}")
-
-# Check dependencies
-import pkg_resources
-requirements = pkg_resources.get_distribution("AbXtract").requires()
-print(f"  Dependencies: {len(requirements)} packages")
-
-# Tool status
-from AbXtract import Config
-config = Config()
-tools = config.check_external_tools()
-print(f"  External tools: {sum(tools.values())}/{len(tools)} available")
-```
-
-## 🚀 Getting Started
-
-### Quick Start
-
-1. **Install AbXtract**:
-   ```bash
-   pip install AbXtract[all]
-   ```
-
-2. **Test installation**:
-   ```bash
-   abxtract --version
-   ```
-
-3. **Run your first analysis**:
-   ```python
-   from AbXtract import AntibodyDescriptorCalculator
-   
-   calc = AntibodyDescriptorCalculator()
-   results = calc.calculate_sequence_descriptors(
-       heavy_sequence="YOUR_HEAVY_SEQUENCE",
-       light_sequence="YOUR_LIGHT_SEQUENCE"
-   )
-   ```
-
-### Next Steps
-
-- 📖 **Read the tutorials**: `examples/AbXtract_Complete_Testing.ipynb`
-- 🧪 **Try the examples**: `python examples/test_abxtract_simple.py`
-- 📚 **Browse documentation**: https://abxtract.readthedocs.io
-- 🔬 **Analyze your data**: Use CLI or Python API
-- 🤝 **Join community**: GitHub Discussions
-
-### Development Setup
-
-For contributors:
-
-```bash
-# Clone repository
-git clone https://github.com/yourusername/AbXtract.git
-cd AbXtract
-
-# Complete development setup
-make dev-setup
-
-# Run tests
-make test
-
-# Check code quality
-make check
-
-# Build documentation
-make docs
-```
-
-## 📚 Additional Resources
-
-- **Documentation**: https://abxtract.readthedocs.io
-- **Source Code**: https://github.com/yourusername/AbXtract
-- **PyPI Package**: https://pypi.org/project/AbXtract/
-- **Bug Reports**: https://github.com/yourusername/AbXtract/issues
-- **Feature Requests**: https://github.com/yourusername/AbXtract/discussions
+- 📖 [Documentation](https://abxtract.readthedocs.io)
+- 💬 [GitHub Issues](https://github.com/pierrellompart-Servier/AbXtract/issues)
+- 🎯 [Discussions](https://github.com/pierrellompart-Servier/AbXtract/discussions)
+- 📧 Email: support@abxtract.org
 
 ## 📝 Citation
 
 If you use AbXtract in your research, please cite:
 
 ```bibtex
-@software{abxtract,
-  author = {Your Name},
+@software{abxtract2024,
+  author = {Llompart, Pierre and Contributors},
   title = {AbXtract: Comprehensive Antibody Descriptor Analysis Toolkit},
-  url = {https://github.com/yourusername/AbXtract},
+  url = {https://github.com/pierrellompart-Servier/AbXtract},
   version = {0.1.0},
-  year = {2024}
+  year = {2024},
+  publisher = {GitHub},
+  journal = {GitHub repository}
 }
 ```
 
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Servier Research Institute for supporting this project
+- The BioPython team for sequence handling tools
+- ANARCI developers for antibody numbering
+- All contributors and users of AbXtract
+
 ---
 
-**Need help?** 💬 [Open an issue](https://github.com/yourusername/AbXtract/issues) or [start a discussion](https://github.com/yourusername/AbXtract/discussions)
+**Made with ❤️ by the AbXtract Team**
+
+*For more information, visit our [documentation](https://abxtract.readthedocs.io) or [contact us](mailto:support@abxtract.org).*
