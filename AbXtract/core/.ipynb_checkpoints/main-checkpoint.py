@@ -424,34 +424,42 @@ class AntibodyDescriptorCalculator:
             except:
                 pass
         
-        
-        # list of charge cols
-        charge_cols = [f"Heavy_Charge_pH_{i}" for i in range(1, 15)]
-
-        # drop if they already exist
-        df = df.drop(columns=charge_cols, errors="ignore")
-
-        # expand the dictionary
-        charges_expanded = df["Heavy_Charges (all pH values)"].apply(pd.Series)
-        charges_expanded.columns = [f"Heavy_Charge_pH_{c}" for c in charges_expanded.columns]
-
-        # merge back
-        df = pd.concat([df.drop(columns=["Heavy_Charges (all pH values)"]),
-                                     charges_expanded], axis=1)
-
-        # list of charge cols
-        charge_cols = [f"Light_Charges_pH_{i}" for i in range(1, 15)]
-
-        # drop if they already exist
-        df = df.drop(columns=charge_cols, errors="ignore")
-
-        # expand the dictionary
-        charges_expanded = df["Light_Charges (all pH values)"].apply(pd.Series)
-        charges_expanded.columns = [f"Light_Charges_pH_{c}" for c in charges_expanded.columns]
-
-        # merge back
-        df = pd.concat([df.drop(columns=["Light_Charges (all pH values)"]),
-                                     charges_expanded], axis=1)
+        for col in df.columns.tolist():
+            print(col)
+            
+        if "Charges (all pH values)" in df.columns.tolist():
+            df = df.rename(columns = {"Charges (all pH values)":"Heavy_Charges (all pH values)"})
+            # list of charge cols
+            charge_cols = [f"Heavy_Charge_pH_{i}" for i in range(1, 15)]
+            # drop if they already exist
+            df = df.drop(columns=charge_cols, errors="ignore")
+            # expand the dictionary
+            charges_expanded = df["Heavy_Charges (all pH values)"].apply(pd.Series)
+            charges_expanded.columns = [f"Heavy_Charge_pH_{c}" for c in charges_expanded.columns]
+            # merge back
+            df = pd.concat([df.drop(columns=["Heavy_Charges (all pH values)"]),
+                                         charges_expanded], axis=1)
+        else:
+            # list of charge cols
+            charge_cols = [f"Heavy_Charge_pH_{i}" for i in range(1, 15)]
+            # drop if they already exist
+            df = df.drop(columns=charge_cols, errors="ignore")
+            # expand the dictionary
+            charges_expanded = df["Heavy_Charges (all pH values)"].apply(pd.Series)
+            charges_expanded.columns = [f"Heavy_Charge_pH_{c}" for c in charges_expanded.columns]
+            # merge back
+            df = pd.concat([df.drop(columns=["Heavy_Charges (all pH values)"]),
+                                         charges_expanded], axis=1)
+            # list of charge cols
+            charge_cols = [f"Light_Charges_pH_{i}" for i in range(1, 15)]
+            # drop if they already exist
+            df = df.drop(columns=charge_cols, errors="ignore")
+            # expand the dictionary
+            charges_expanded = df["Light_Charges (all pH values)"].apply(pd.Series)
+            charges_expanded.columns = [f"Light_Charges_pH_{c}" for c in charges_expanded.columns]
+            # merge back
+            df = pd.concat([df.drop(columns=["Light_Charges (all pH values)"]),
+                                         charges_expanded], axis=1)
 
         liabilities = df[["SeqID", "Type", "Heavy_Length", "Light_Length", "liabilities"]]
         df = df.drop("liabilities", axis = 1)

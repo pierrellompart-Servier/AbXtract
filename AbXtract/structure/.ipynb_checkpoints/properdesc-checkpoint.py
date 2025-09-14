@@ -2347,6 +2347,13 @@ def computeDescriptors(is_fv, isotype= 'igg1', lc_type= 'kappa',
     net_charge = featurizer.net_charge()
     df_final_AA['residue_name_U'] = df_final_AA['residue_name'].str.upper()
 
+    if LC == '':
+        LC_chain_ID=None
+
+    if HC == '':
+        HC_chain_ID=None
+
+
     if HC_chain_ID:
         vh_seq = extract_fv_seq(HC)
         seq_HC = SeqAnnotation(seq = HC)
@@ -2356,7 +2363,7 @@ def computeDescriptors(is_fv, isotype= 'igg1', lc_type= 'kappa',
         vl_seq = extract_fv_seq(LC)
         seq_LC = SeqAnnotation(seq = LC)
         featurizer.seq_LC = LC
-
+    
     # Residue-level descriptors
     mw_chain = compute_molecular_weight(df_final_AA)
     mw_total = compute_total_molecular_weight(df_final_AA)

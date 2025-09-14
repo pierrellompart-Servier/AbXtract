@@ -130,8 +130,8 @@ class Config:
     # Analysis selection flags
     calculate_liabilities: bool = True
     calculate_bashour: bool = True
-    calculate_peptide: bool = True # 20-30 sec
-    calculate_protpy: bool = True # 7 sec 
+    calculate_peptide: bool = False # 20-30 sec
+    calculate_protpy: bool = False # 7 sec 
     calculate_sasa: bool = True
     calculate_charge: bool = True
     calculate_dssp: bool = True
