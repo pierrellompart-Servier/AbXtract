@@ -1,0 +1,13 @@
+chain,position,aa,liability
+H,78 ,M,Met oxidation (M)
+L,4 ,M,Met oxidation (M)
+H,118 ,W,Trp oxidation (W)
+L,41 ,W,Trp oxidation (W)
+H,109 ,D,Asp isomerisation (DG DS DT DD DH)
+H,110 ,G,Asp isomerisation (DG DS DT DD DH)
+H,112 ,D,Asp isomerisation (DG DS DT DD DH)
+H,113 ,D,Asp isomerisation (DG DS DT DD DH)
+H,107 ,E,Lysine Glycation (KE KD EK ED)
+H,108 ,K,Lysine Glycation (KE KD EK ED)
+L,15 ,V,Polyreactivity (RR VG VV VVV WW WWW WXW)
+L,16 ,G,Polyreactivity (RR VG VV VVV WW WWW WXW)
