@@ -1,0 +1,3 @@
+# Ignore .pdb files in specific folders
+examples/heavy_output/*.pdb
+examples/data/test_VH/*.pdb

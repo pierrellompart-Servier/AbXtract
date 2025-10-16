@@ -1,364 +1,305 @@
-# AbXtract - Comprehensive Antibody Descriptor Analysis Toolkit
+# AbXtract - Antibody Descriptor Calculator
 
-[![PyPI version](https://badge.fury.io/py/AbXtract.svg)](https://badge.fury.io/py/AbXtract)
-[![Python Version](https://img.shields.io/pypi/pyversions/AbXtract)](https://pypi.org/project/AbXtract/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+A comprehensive Python package for calculating structural and sequence-based descriptors for antibodies, including physicochemical properties, liability identification, and detailed structural analysis.
 
-**AbXtract** is a comprehensive Python toolkit for extracting and analyzing antibody descriptors from sequences and structures. It provides a unified interface for calculating thousands of physicochemical, structural, and sequence-based features for antibody characterization and machine learning applications.
-
-## 🎯 Key Features
-
-- **📊 Comprehensive Descriptor Calculation**: Extract 30,000+ descriptors from antibody sequences and structures
-- **🔬 Multi-level Analysis**: 
-  - Sequence-based features (Bashour, ProtPy, Peptide descriptors)
-  - Structure-based features (SASA, DSSP, Arpeggio interactions)
-  - Physicochemical properties (charge, pKa via PROPKA, hydrophobicity)
-  - Liability detection (PTMs, aggregation hotspots, immunogenicity)
-- **⚡ High Performance**: Parallel processing with optimized algorithms
-- **🧬 Antibody-Specific**: 
-  - CDR identification and analysis
-  - Multiple numbering schemes (IMGT, Kabat, Chothia, Martin, AHo)
-  - VH/VL interface analysis
-- **📈 Advanced Visualization**: Built-in plotting for property profiles
-- **🔧 Flexible Integration**: Easy integration with ML pipelines
-
-## 📋 Table of Contents
-
-- [Installation](#-installation)
-- [Quick Start](#-quick-start)
-- [Core Modules](#-core-modules)
-- [Usage Examples](#-usage-examples)
-- [Descriptor Categories](#-descriptor-categories)
-- [Environment Management](#-environment-management)
-- [External Tools](#-external-tools)
-
-
-## 🚀 Installation
-
-### Quick Install via Conda Environment (Recommended)
+## 🚀 Quick Installation
 
 ```bash
-# Download the environment file
-wget https://github.com/pierrellompart-Servier/AbXtract/raw/main/environment.yml
+# Create conda environment
+conda env create -f abxtract_environment_minimal.yml -n abxtract_new
+conda activate abxtract_new
+pip install ipykernel
+python -m ipykernel install --user --name=abxtract --display-name "Python (abxtract) lite"
 
-# Create and activate environment
-conda env create -f environment.yml
-conda activate abxtract
-
-# Verify installation
-python -c "import AbXtract; print(f'AbXtract v{AbXtract.__version__} ready!')"
+# Install dependencies
+pip install anarci abnumber propka
+conda install -c salilab dssp -y # i had difficulties making dssp work
 ```
 
-### Export Your Working Environment
+## 🔧 Dependencies
 
-If you have a working AbXtract setup, you can save it for others:
+### Antibody-specific Tools
+- **anarci**: Antibody numbering (IMGT/Kabat/Chothia)
+- **dssp**: Secondary structure calculation
+- **propka**: pKa prediction
+- **arpeggio** : Interaction analysis
 
-```bash
-# Quick export
-conda activate abxtract
-conda env export > abxtract_environment.yml
-
-# Cross-platform export (recommended)
-conda env export --no-builds > abxtract_environment_crossplatform.yml
-
-# Or use the provided script
-bash export_env_bash.sh abxtract
-```
-
-### Alternative Installation Methods
-
-#### Method 1: Development Installation
-```bash
-# Clone repository
-git clone https://github.com/pierrellompart-Servier/AbXtract.git
-cd AbXtract
-
-# Install in development mode
-pip install -e .
-```
-
-## ⚡ Quick Start
-
-### Basic Usage
+## 💡 Quick Start
 
 ```python
+import sys
+sys.path.insert(0, '/path/to/AbXtract')
 from AbXtract import AntibodyDescriptorCalculator
 
 # Initialize calculator
 calc = AntibodyDescriptorCalculator()
 
-# Calculate descriptors from sequences
-sequence_results, liabilities = calc.calculate_sequence_descriptors(
-    heavy_sequence="QVQLVQSGAEVKKPGASVKVSCKASGGTFSSYAISWVRQAPGQGLEWMGG",
-    light_sequence="DIQMTQSPSSLSASVGDRVTITCRASHSISWLAWYQQKPGKAPKLLIY",
-    sequence_id="TestAb"
-)
-
-print(f"Calculated {len(sequence_results.columns)} sequence descriptors")
-print(f"Detected liabilities: {liabilities['liabilities'].iloc[0]}")
-```
-
-### Structure-Based Analysis
-
-```python
-# Calculate structure descriptors
-structure_results_seq, structure_results_comp, df_residues, df_AA, df_Ab = calc.calculate_structure_descriptors(
-    heavy_sequence=heavy_sequence,
-    light_sequence=light_sequence,
+# Calculate all descriptors
+df_AA, df_Ab = calc.calculate_antibody_features(
     pdb_file="antibody.pdb",
-    structure_id="TestAb_Structure"
+    heavy_sequence="QVQLVQSGAEVKKPGASVKVSCKASG...",
+    light_sequence="DIQMTQSPSSVSASVGDRVTITCRAS...",
+    isotype='igg1',
+    lc_type='kappa',
+    pH=7.4
 )
 
-print(f"Residue-level descriptors: {df_residues.shape}")
-print(f"Amino acid descriptors: {df_AA.shape}")
-print(f"Antibody-level descriptors: {df_Ab.shape}")
+# Save results
+df_AA.to_csv("residue_level.csv", index=False)  # Per-residue data
+df_Ab.to_csv("antibody_summary.csv", index=False)  # Summary data
 ```
 
-## 🔬 Core Modules
+## 📊 Descriptor Types
 
-### Sequence Analysis (`AbXtract.sequence`)
-
-- **`BashourDescriptorCalculator`**: Bashour et al. antibody-specific descriptors
-- **`PeptideDescriptorCalculator`**: Comprehensive peptide properties
-- **`SequenceLiabilityAnalyzer`**: PTM and liability detection
-- **`AntibodyNumbering`**: Multiple numbering schemes and CDR identification
-- **`protpy_descriptors`**: ProtPy-based sequence features
-
-### Structure Analysis (`AbXtract.structure`)
-
-- **`SASACalculator`**: Solvent accessible surface area analysis
-- **`DSSPAnalyzer`**: Secondary structure assignment
-- **`ChargeAnalyzer`**: Charge distribution and patches
-- **`PropkaAnalyzer`**: pKa predictions and pH-dependent properties
-- **`ArpeggioAnalyzer`**: Molecular interactions (H-bonds, salt bridges, π-stacking)
-- **`properdesc`**: Proper descriptor calculation
-
-### Utilities (`AbXtract.utils`)
-
-- **`analysis_descriptors`**: Advanced analysis and visualization functions
-- **`validators`**: Sequence and structure validation
-- **`converters`**: Format conversion utilities
-- **`pdb_utils`**: PDB file manipulation
-
-## 📊 Descriptor Categories
-
-### 1. Sequence-Based Descriptors
-- Amino acid composition and properties
-- Hydrophobicity profiles (multiple scales)
-- Charge distribution patterns
-- Sequence complexity metrics
-- CDR-specific features
-- Peptide descriptors for all k-mers
-
-### 2. Structure-Based Descriptors
-- Per-residue SASA and burial
-- Secondary structure elements
-- Interaction networks
-- Spatial aggregation propensity (SAP)
-- Charge patches
-- pH-dependent properties
-
-### 3. Physicochemical Properties
-- Molecular weight and pI
-- Instability and aliphatic indices
-- GRAVY scores
-- Extinction coefficients
-- Dipole moments
-- Electrostatic properties
-
-### 4. Liability Features
-- Post-translational modifications
-  - N-glycosylation sites
-  - Deamidation hotspots
-  - Oxidation sites (Met, Trp)
-  - Isomerization sites
-- Aggregation prone regions
-- Immunogenicity motifs
-- Polyreactivity signatures
-
-### 5. pH-Dependent Properties
-- Charge profiles
-- Folded/unfolded states
-- Free energy changes
-- pKa shifts
-- Titration curves
-
-## 📈 Visualization
-
-AbXtract includes comprehensive visualization capabilities:
+### 1. Sequence Descriptors
+Analyze sequence composition and identify potential liabilities.
 
 ```python
-from AbXtract.utils import analysis_descriptors
-
-# Create complete antibody dataframe with all features
-df_heavy_final, df_light_final, df_final = desc_Ab(
-    HEAVY_SEQUENCE, 
-    LIGHT_SEQUENCE, 
-    PDB_FILE
+sequence_results, liabilities = calc.calculate_sequence_descriptors(
+    heavy_sequence=HEAVY_SEQ,
+    light_sequence=LIGHT_SEQ,
+    sequence_id="Ab1"
 )
-
-# Plot protein properties
-fig = analysis_descriptors.plot_protein_properties(df_heavy_final, chain_type='heavy')
-plt.show()
-
-# Plot pH profiles
-patterns = ["Light_Charges_pH_", "Heavy_Charge_pH_", "Free_Energy_kcal_mol_"]
-col_ph = [col for col in df_final.columns if any(p in col for p in patterns)]
-object_df = analysis_descriptors.reshape_dataframe_by_object(df_final[col_ph])[0]
-fig = analysis_descriptors.plot_ph_profiles(object_df, object_id=0)
-plt.show()
-
-# Plot PROPKA-specific properties
-fig_propka = analysis_descriptors.plot_propka_properties(df_heavy_final, chain_type='heavy')
-plt.show()
 ```
 
-## 🔧 External Tools Integration
+**Outputs:**
+- Amino acid composition
+- PTM sites (N-glycosylation, oxidation, deamidation)
+- Liability motifs (unpaired Cys, polyreactivity, integrin binding)
+- Charge distribution
+- Isoelectric point (pI)
 
-AbXtract integrates with several computational biology tools:
+### 2. Peptide Descriptors
+Calculate physicochemical properties for full sequences and CDRs.
 
-### Required Tools
+```python
+from AbXtract.sequence import PeptideDescriptorCalculator
+
+peptide_calc = PeptideDescriptorCalculator()
+peptide_results = peptide_calc.calculate_all(
+    heavy_sequence=HEAVY_SEQ,
+    light_sequence=LIGHT_SEQ
+)
+```
+
+**Outputs:**
+- Molecular weight (MW)
+- Hydrophobicity (HW, Eisenberg, Rose, Janin, Engelman scales)
+- etc...
+
+### 3. Structure Descriptors
+Analyze 3D structure from PDB files.
+
+```python
+structure_seq, structure_comp, df_res, df_AA, df_Ab = calc.calculate_structure_descriptors(
+    heavy_sequence=HEAVY_SEQ,
+    light_sequence=LIGHT_SEQ,
+    pdb_file="antibody.pdb",
+    structure_id="Ab1"
+)
+```
+
+**Outputs:**
+- **SASA/RASA**: Solvent accessible surface area (absolute & relative)
+- **SAP**: Spatial aggregation propensity scores
+- **Buried residues**: Core vs surface classification
+- **Disulfide bonds**: Cysteine pairing identification
+- **Secondary structure**: α-helix, β-sheet content (via DSSP)
+- **pKa values**: Ionization states (via PROPKA)
+- **Interactions**: H-bonds, salt bridges (via Arpeggio)
+
+### 4. Numbering & CDR Extraction
+Apply IMGT/Kabat/Chothia numbering schemes and extract CDR sequences.
+
+```python
+from AbXtract.sequence import AntibodyNumbering
+
+numbering = AntibodyNumbering(scheme='imgt')
+
+# Number sequences
+heavy_numbered = numbering.number_sequence(HEAVY_SEQ, 'H')
+light_numbered = numbering.number_sequence(LIGHT_SEQ, 'L')
+
+# Extract CDRs
+annotated_H, cdrs_H = numbering.get_cdr_sequences(heavy_numbered, 'H')
+annotated_L, cdrs_L = numbering.get_cdr_sequences(light_numbered, 'L')
+
+print(cdrs_H)
+# {'CDR1-IMGT': 'GGTFGRYG', 'CDR2-IMGT': 'ISPSGGTT', 'CDR3-IMGT': 'AREKDGYPGKGFDI'}
+```
+
+## 📋 Output Data Structures
+
+### Residue-Level DataFrame (`df_AA`)
+Per-residue annotations for both heavy and light chains.
+
+| Column | Description |
+|--------|-------------|
+| `position_seq` | Sequential position (1-based) |
+| `position_num` | IMGT/Kabat numbered position |
+| `amino_acid` | Single letter amino acid code |
+| `region` | FR1/CDR1/FR2/CDR2/FR3/CDR3/FR4 |
+| `chain` | H (Heavy) or L (Light) |
+| `SASA` | Solvent accessible surface area (Ų) |
+| `RASA` | Relative ASA (%) |
+| `sap` | Spatial aggregation propensity score |
+| `high_sap` | Boolean for high SAP regions |
+| `buried` | Boolean for buried residues |
+| `disulfide_bond` | Boolean for Cys in disulfide |
+| `pka` | Predicted pKa value |
+| `pka_shift` | pKa shift from model value |
+| `hydrophobicity_*` | Multiple hydrophobicity scales |
+| `charge` | Charge at specified pH |
+| Liability columns | PTM sites, liability motifs |
+
+### Antibody-Level DataFrame (`df_Ab`)
+Single-row summary with comprehensive antibody properties.
+
+**Categories:**
+- **Structure metrics**: Total SASA, buried area, disulfide count, high SAP residues
+- **Sequence metrics**: CDR sequences (H1-3, L1-3), chain lengths, MW
+- **Peptide properties**: Hydrophobicity indices, pI, instability, aromaticity (per chain)
+- **Liability flags**: PTM sites, unpaired Cys, polyreactivity motifs
+
+## ⚙️ Configuration
+
 ```python
 from AbXtract import Config
 
-# Check tool availability
+# Default configuration
 config = Config()
-tool_status = config.check_external_tools()
 
-for tool, available in tool_status.items():
-    status = "✅" if available else "❌"
-    print(f"{tool}: {status}")
-```
-
-### Tool Installation
-```bash
-# Core tools via conda
-conda install -c conda-forge dssp freesasa
-conda install -c bioconda hmmer=3.3.2 muscle
-
-# PROPKA for pKa calculations
-pip install propka
-
-# ANARCI for antibody numbering
-pip install anarci
-python -c "import anarci; anarci.setup()"
-
-# Arpeggio for interactions (included in repo)
-cd arpeggio && python setup.py install
-```
-
-## 📖 Usage Examples
-
-### Example 1: Complete Antibody Analysis Pipeline
-
-```python
-import sys
-import pandas as pd
-from pathlib import Path
-sys.path.insert(0, '/path/to/AbXtract')
-
-from AbXtract import AntibodyDescriptorCalculator, Config
-from AbXtract.sequence import (
-    SequenceLiabilityAnalyzer,
-    BashourDescriptorCalculator,
-    PeptideDescriptorCalculator,
-    AntibodyNumbering
-)
-from AbXtract.utils import analysis_descriptors
-
-# Initialize components
-config = Config()
-numbering = AntibodyNumbering(scheme='imgt')
-peptide_calc = PeptideDescriptorCalculator()
-calc = AntibodyDescriptorCalculator(config=config)
-
-# Define sequences
-HEAVY_SEQUENCE = "QVQLVQSGAEVKKPGASVKVSCKASGGTFSSYAISWVRQAPGQGLEWMGG..."
-LIGHT_SEQUENCE = "DIQMTQSPSSLSASVGDRVTITCRASHSISWLAWYQQKPGKAPKLLIY..."
-PDB_FILE = Path("data/test/test.pdb")
-
-# Run complete analysis
-df_heavy_final, df_light_final, df_final = desc_Ab(
-    HEAVY_SEQUENCE, 
-    LIGHT_SEQUENCE, 
-    PDB_FILE
-)
-
-# Export results
-df_final.to_csv("antibody_descriptors.csv", index=False)
-print(f"Total descriptors calculated: {df_final.shape[1]}")
-```
-
-### Example 2: Batch Processing
-
-```python
-# Process multiple antibodies
-antibodies = [
-    {"id": "Ab1", "heavy": "QVQLV...", "light": "DIQMT...", "pdb": "ab1.pdb"},
-    {"id": "Ab2", "heavy": "EVQLV...", "light": "EIVLT...", "pdb": "ab2.pdb"},
-]
-
-all_results = []
-for ab in antibodies:
-    df_h, df_l, df_final = desc_Ab(ab["heavy"], ab["light"], ab["pdb"])
-    df_final["antibody_id"] = ab["id"]
-    all_results.append(df_final)
-
-# Combine results
-combined_df = pd.concat(all_results, axis=0)
-combined_df.to_csv("batch_analysis.csv")
-```
-
-### Example 3: Custom Configuration
-
-```python
-# Custom configuration for specific analyses
-custom_config = Config.from_dict({
+# Custom configuration
+config = Config.from_dict({
     'pH': 7.4,
-    'numbering_scheme': 'kabat',
+    'numbering_scheme': 'imgt',  # Options: 'imgt', 'kabat', 'chothia'
     'verbose': True,
     'calculate_dssp': True,
     'calculate_propka': True,
-    'calculate_arpeggio': True,
-    'n_jobs': 4  # Parallel processing
+    'calculate_arpeggio': False
 })
 
-calc = AntibodyDescriptorCalculator(config=custom_config)
+# Initialize with custom config
+calc = AntibodyDescriptorCalculator(config=config)
+
+# Check tool availability
+tool_status = config.check_external_tools()
+print(tool_status)
+# {'dssp': True, 'propka': True, 'arpeggio': False}
 ```
 
+## 🔍 Complete Analysis Workflow
 
-#### `Config`
 ```python
-config = Config(
-    pH=7.4,
-    numbering_scheme='imgt',  # imgt, kabat, chothia, martin, aho
-    calculate_liabilities=True,
-    calculate_bashour=True,
-    calculate_peptide=True,
-    calculate_protpy=True,
-    calculate_dssp=True,
-    calculate_propka=True,
-    calculate_arpeggio=True
+import sys
+sys.path.insert(0, '/path/to/AbXtract')
+
+from AbXtract import AntibodyDescriptorCalculator, Config
+from AbXtract.sequence import AntibodyNumbering, PeptideDescriptorCalculator
+
+# Initialize components
+config = Config()
+calc = AntibodyDescriptorCalculator(config=config)
+numbering = AntibodyNumbering(scheme='imgt')
+peptide_calc = PeptideDescriptorCalculator()
+
+# Define sequences
+HEAVY_SEQ = "QVQLVQSGAEVKKPGASVKVSCKASGGTFGRYGIHWVRQAPGKGLEWMGWISAYNGNTNYAQKLQGRVTMTTDTSTSTAYMELRSLRSDDTAVYYCAREKDGYPGKGFDIWGQGTMVTVSS"
+LIGHT_SEQ = "DIQMTQSPSSVSASVGDRVTITCRASQGISSWLAWYQQKPGKAPKLLIYAASSLQSGVPSRFSGSGSGTDFTLTISSLQPEDFATYYCQQANSFPLTFGGGTKVEIK"
+
+# 1. Complete analysis
+df_AA, df_Ab = calc.calculate_antibody_features(
+    pdb_file="antibody.pdb",
+    heavy_sequence=HEAVY_SEQ,
+    light_sequence=LIGHT_SEQ,
+    isotype='igg1',
+    lc_type='kappa',
+    pH=7.4
 )
+
+# 2. Individual descriptor calculations
+sequence_results, liabilities = calc.calculate_sequence_descriptors(
+    heavy_sequence=HEAVY_SEQ,
+    light_sequence=LIGHT_SEQ,
+    sequence_id="Ab1"
+)
+
+peptide_results = peptide_calc.calculate_all(
+    heavy_sequence=HEAVY_SEQ,
+    light_sequence=LIGHT_SEQ
+)
+
+structure_seq, structure_comp, df_residues, _, _ = calc.calculate_structure_descriptors(
+    heavy_sequence=HEAVY_SEQ,
+    light_sequence=LIGHT_SEQ,
+    pdb_file="antibody.pdb",
+    structure_id="Ab1"
+)
+
+# 3. CDR extraction and numbering
+heavy_numbered = numbering.number_sequence(HEAVY_SEQ, 'H')
+light_numbered = numbering.number_sequence(LIGHT_SEQ, 'L')
+
+annotated_H, cdrs_H = numbering.get_cdr_sequences(heavy_numbered, 'H')
+annotated_L, cdrs_L = numbering.get_cdr_sequences(light_numbered, 'L')
+
+# 4. Get hydrophobicity profiles
+heavy_profiles = numbering.get_peptide_profiles(HEAVY_SEQ)
+light_profiles = numbering.get_peptide_profiles(LIGHT_SEQ)
+
+# 5. Export results
+df_AA.to_csv("residue_analysis.csv", index=False)
+df_Ab.to_csv("antibody_summary.csv", index=False)
+
+# Print CDR sequences
+print("Heavy Chain CDRs:")
+for cdr, seq in cdrs_H.items():
+    print(f"  {cdr}: {seq}")
+
+print("\nLight Chain CDRs:")
+for cdr, seq in cdrs_L.items():
+    print(f"  {cdr}: {seq}")
 ```
 
+## 🧪 Liability Screening Example
 
-## 👩‍💻 Development
+```python
+# Focus on liability analysis
+sequence_results, liabilities = calc.calculate_sequence_descriptors(
+    heavy_sequence=HEAVY_SEQ,
+    light_sequence=LIGHT_SEQ,
+    sequence_id="Screening"
+)
 
-### Repository Structure
+# Extract liability list
+liability_list = liabilities['liabilities'].iloc[0]
+
+# Filter high-risk liabilities
+high_risk_liabilities = [
+    'Unpaired_Cys', 
+    'N-linked_glycosylation', 
+    'Met_oxidation',
+    'Asn_deamidation',
+    'Asp_isomerization'
+]
+
+high_risk = [l for l in liability_list if l['name'] in high_risk_liabilities]
+
+print(f"Found {len(high_risk)} high-risk liabilities:")
+for liability in high_risk:
+    print(f"  {liability['name']} at {liability['chain']}:{liability['start_position']}-{liability['end_position']}")
+    print(f"    Sequence: {liability['sequence']}")
 ```
-AbXtract/
-├── AbXtract/
-│   ├── __init__.py
-│   ├── core/           # Main calculation logic
-│   ├── sequence/       # Sequence analysis modules
-│   ├── structure/      # Structure analysis modules
-│   ├── utils/          # Utility functions
-│   └── data/           # Reference data and test files
-├── arpeggio/           # Arpeggio integration
-├── examples/           # Usage examples and notebooks
-├── tests/              # Unit tests
-├── docs/               # Documentation
-└── environment.yml     # Conda environment file
-```
 
+## 🛠️ Troubleshooting
+
+The depedencies need to have path to their localisation defined in the config file, located in AbXtract/core/.
+So just do which {depedencies name}, will output path to put in config.py. To correct.
+
+### Missing External Tools
+```bash
+# Install missing tools
+conda install -c salilab dssp
+pip install propka
+pip install anarci
+```
