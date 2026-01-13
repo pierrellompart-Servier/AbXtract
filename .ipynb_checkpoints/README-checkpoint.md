@@ -2,51 +2,61 @@
 
 A comprehensive Python package for calculating structural and sequence-based descriptors for antibodies, including physicochemical properties, liability identification, and detailed structural analysis.
 
+-> Trouble with DSSP library that can't process some pdb (I think due to missing hydrogrens)
+
 ## 🚀 Quick Installation
 
 ```bash
 # Create conda environment
-conda env create -f abxtract_environment_minimal.yml -n abxtract_new
-conda activate abxtract_new
-pip install ipykernel
-python -m ipykernel install --user --name=abxtract --display-name "Python (abxtract) lite"
-
-# Install dependencies
-pip install anarci abnumber propka
+conda env create -f abxtract.yml -n abxtract
+conda activate abxtract
+pip install abnumber propka
 conda install -c salilab dssp -y # i had difficulties making dssp work
+pip install peptides protpy prody tqdm numba matplotlib
+pip install scikit-learn
+pip install seaborn 
+conda install bioconda::anarci
+pip install freesasa
+conda install conda-forge::openmm
+conda install conda-forge::pdbfixer
+pip install pdbe-arpeggio
+conda install bioconda::muscle
+conda install bioconda::reduce
+pip install ipykernel
+python -m ipykernel install --user --name=abxtract --display-name "abxtract"
 ```
 
-## 🔧 Dependencies
-
-### Antibody-specific Tools
-- **anarci**: Antibody numbering (IMGT/Kabat/Chothia)
-- **dssp**: Secondary structure calculation
-- **propka**: pKa prediction
-- **arpeggio** : Interaction analysis
 
 ## 💡 Quick Start
 
-```python
-import sys
-sys.path.insert(0, '/path/to/AbXtract')
-from AbXtract import AntibodyDescriptorCalculator
+```bash
+conda activate abxtract
 
-# Initialize calculator
-calc = AntibodyDescriptorCalculator()
+# Basic run (mode r by default)
+python run_abxtract.py -i input.csv -o results/
 
-# Calculate all descriptors
-df_AA, df_Ab = calc.calculate_antibody_features(
-    pdb_file="antibody.pdb",
-    heavy_sequence="QVQLVQSGAEVKKPGASVKVSCKASG...",
-    light_sequence="DIQMTQSPSSVSASVGDRVTITCRAS...",
-    isotype='igg1',
-    lc_type='kappa',
-    pH=7.4
-)
+# Wide/deep mode with custom pH
+python run_abxtract.py -i input.csv -o output/ -m wd -p 6.5
 
-# Save results
-df_AA.to_csv("residue_level.csv", index=False)  # Per-residue data
-df_Ab.to_csv("antibody_summary.csv", index=False)  # Summary data
+# Custom numbering scheme
+python run_abxtract.py -i input.csv -o output/ --numbering-scheme kabat
+
+# Force 8 parallel jobs
+python run_abxtract.py -i input.csv -o output/ --n-jobs 8
+```
+
+### All CLI Options
+```
+-i, --input           Input CSV file (required)
+-o, --output          Output directory (required)
+-m, --mode            b/r/mr/mw/wd (default: r)
+--numbering-scheme    imgt/kabat/chothia (default: imgt)
+--cdr-definition      imgt/kabat/chothia/north/contact
+-p, --pH              pH value (default: 7.4)
+-t, --temperature     Temperature °C (default: 25.0)
+-hs, --hydrophobicity-scale  Eisenberg/KyteDoolittle/etc.
+--n-jobs              Override parallel jobs count
+--abxtract-path       Path to AbXtract package
 ```
 
 ## 📊 Descriptor Types
@@ -289,17 +299,4 @@ print(f"Found {len(high_risk)} high-risk liabilities:")
 for liability in high_risk:
     print(f"  {liability['name']} at {liability['chain']}:{liability['start_position']}-{liability['end_position']}")
     print(f"    Sequence: {liability['sequence']}")
-```
-
-## 🛠️ Troubleshooting
-
-The depedencies need to have path to their localisation defined in the config file, located in AbXtract/core/.
-So just do which {depedencies name}, will output path to put in config.py. To correct.
-
-### Missing External Tools
-```bash
-# Install missing tools
-conda install -c salilab dssp
-pip install propka
-pip install anarci
 ```

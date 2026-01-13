@@ -64,8 +64,6 @@ def create_complete_antibody_dataframe(len_heavy_seq, df_residue, df_Ab, sequenc
         })
     df = pd.DataFrame(data)
     
-    print("structures_data",structures_data)
-    print("df_Ab",df_Ab)
     
     # STEP 2: Add ANARCI numbered positions and regions
     df['position_num'] = np.nan
@@ -405,7 +403,7 @@ def create_complete_antibody_dataframe(len_heavy_seq, df_residue, df_Ab, sequenc
                                 df.loc[idx, col] = match[col]
                         matched_count += 1
                     else:
-                        print(f" ")
+                        a = 1+1
             
 
     # STEP 5: Add liability data
@@ -1078,10 +1076,6 @@ def display_results(result_dict, n_objects_to_show=2):
     for i, (obj_id, df) in enumerate(result_dict.items()):
         if i >= n_objects_to_show:
             break
-        print(f"\n=== Object {obj_id} ===")
-        print(df.head())  # Show first few columns
-        print(f"Shape: {df.shape}")
-        print(f"Columns range: {df.columns[0]} to {df.columns[-1]}")
 
 def get_object_dataframe(result_dict, object_index):
     """

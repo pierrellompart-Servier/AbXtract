@@ -1,0 +1,117 @@
+2026-01-13 12:24:49 - INFO - ============================================================
+2026-01-13 12:24:49 - INFO - AbXtract CLI - Antibody Descriptor Calculator
+2026-01-13 12:24:49 - INFO - ============================================================
+2026-01-13 12:24:49 - INFO - Using AbXtract from: /home/HX46_FR5/github/AbXtract
+2026-01-13 12:24:49 - INFO - Loaded input file: antibodies.csv (2 rows)
+2026-01-13 12:24:49 - INFO - CPU Configuration: 8 available, using 6 jobs
+2026-01-13 12:24:49 - INFO - Distribution: ~0.3 antibodies per core
+2026-01-13 12:24:49 - INFO - Using computation mode: wd
+2026-01-13 12:24:49 - INFO - Configuration:
+2026-01-13 12:24:49 - INFO -   - Numbering scheme: imgt
+2026-01-13 12:24:49 - INFO -   - CDR definition: imgt
+2026-01-13 12:24:49 - INFO -   - pH: 6.5
+2026-01-13 12:24:49 - INFO -   - Temperature: 25.0°C
+2026-01-13 12:24:49 - INFO -   - Hydrophobicity scale: Eisenberg
+2026-01-13 12:24:49 - INFO -   - Mode calculations: {'calculate_liabilities': True, 'calculate_bashour': True, 'calculate_peptide': True, 'calculate_protpy': True, 'calculate_sasa': True, 'calculate_charge': True, 'calculate_dssp': True, 'calculate_propka': True, 'calculate_arpeggio': True, 'calculate_cdr_properties': True, 'calculate_proper': True}
+2026-01-13 12:24:49 - INFO - ------------------------------------------------------------
+2026-01-13 12:24:49 - INFO - Starting antibody processing...
+2026-01-13 12:24:49 - INFO - Processing 2 antibodies using 6 parallel jobs
+2026-01-13 12:24:54 - INFO - Loaded 12 liability definitions
+2026-01-13 12:24:54 - INFO - Loaded 12 liability definitions
+2026-01-13 12:24:58 - INFO - Calculating sequence descriptors for VH6_21_VH (VHH/Nanobody)
+2026-01-13 12:24:58 - INFO -   Calculating sequence liabilities...
+2026-01-13 12:24:58 - INFO -   Calculating Bashour descriptors...
+2026-01-13 12:24:58 - INFO - Calculating descriptors for 1 sequences
+2026-01-13 12:24:58 - INFO -   Calculating peptide descriptors...
+2026-01-13 12:25:01 - INFO - Calculating sequence descriptors for B10_1_H (Antibody)
+2026-01-13 12:25:01 - INFO -   Calculating sequence liabilities...
+2026-01-13 12:25:01 - INFO -   Calculating Bashour descriptors...
+2026-01-13 12:25:01 - INFO - Calculating descriptors for 2 sequences
+2026-01-13 12:25:01 - INFO -   Calculating peptide descriptors...
+2026-01-13 12:25:40 - INFO -   Calculating ProtPy descriptors...
+2026-01-13 12:25:42 - INFO - Calculating structure descriptors for VH6_21_VH
+2026-01-13 12:25:42 - INFO -   Calculating SASA and SAP...
+2026-01-13 12:25:42 - INFO -   Calculating charge distribution...
+2026-01-13 12:25:42 - INFO -   Analyzing disulfide bonds...
+2026-01-13 12:25:42 - INFO -   Calculating charge dispersion...
+2026-01-13 12:25:42 - INFO -   Calculating extended SASA metrics...
+2026-01-13 12:25:42 - INFO -   Running DSSP analysis...
+2026-01-13 12:25:42 - ERROR - DSSP analysis failed: DSSP failed to produce an output
+2026-01-13 12:25:42 - INFO -   Running extended PROPKA analysis...
+2026-01-13 12:25:42 - ERROR - PROPKA failed: Traceback (most recent call last):
+  File "/opt/conda/envs/abxtract/bin/propka3", line 7, in <module>
+    sys.exit(main())
+  File "/opt/conda/envs/abxtract/lib/python3.10/site-packages/propka/run.py", line 44, in main
+    my_molecule = read_molecule_file(pdbfile, my_molecule)
+  File "/opt/conda/envs/abxtract/lib/python3.10/site-packages/propka/input.py", line 108, in read_molecule_file
+    conformations, conformation_names = read_pdb(
+  File "/opt/conda/envs/abxtract/lib/python3.10/site-packages/propka/input.py", line 255, in read_pdb
+    for (name, atom) in lines:
+  File "/opt/conda/envs/abxtract/lib/python3.10/site-packages/propka/input.py", line 180, in get_atom_lines_from_pdb
+    with open_file_for_reading(pdb_file) as handle:
+  File "/opt/conda/envs/abxtract/lib/python3.10/site-packages/propka/input.py", line 48, in open_file_for_reading
+    return contextlib.closing(open(input_file, 'rt'))
+FileNotFoundError: [Errno 2] No such file or directory: 'data/test/VH6_21.pdb'
+
+2026-01-13 12:25:46 - INFO -   Calculating ProtPy descriptors...
+2026-01-13 12:25:50 - WARNING - Failed to process VH6_21_VH: 'NoneType' object is not subscriptable
+Traceback (most recent call last):
+  File "/home/HX46_FR5/github/AbXtract/run_abxtract.py", line 291, in process_single_antibody
+    structure_results_seq, structure_results_comp, df_residues, df_AA, df_Ab = calc.calculate_structure_descriptors(
+  File "/home/HX46_FR5/github/AbXtract/AbXtract/core/main.py", line 781, in calculate_structure_descriptors
+    df_AA, df_Ab = computeDescriptors(
+  File "/home/HX46_FR5/github/AbXtract/AbXtract/structure/properdesc.py", line 2340, in computeDescriptors
+    seq_features = get_all_seq_features(heavy_seq=HC, light_seq=LC, is_fv=is_fv, isotype=isotype, lc_type=lc_type, pH=pH)
+  File "/home/HX46_FR5/github/AbXtract/AbXtract/structure/properdesc.py", line 481, in get_all_seq_features
+    seq_featurizer = SeqFeaturizer(
+  File "/home/HX46_FR5/github/AbXtract/AbXtract/structure/properdesc.py", line 229, in __init__
+    self.vl_seq = extract_fv_seq(self.l_full_seq)
+  File "/home/HX46_FR5/github/AbXtract/AbXtract/structure/properdesc.py", line 1719, in extract_fv_seq
+    fv_seq = ''.join([a for _, a in numbering[0][0] if a != '-'])
+TypeError: 'NoneType' object is not subscriptable
+
+2026-01-13 12:25:53 - INFO - Calculating structure descriptors for B10_1_H
+2026-01-13 12:25:53 - INFO -   Calculating SASA and SAP...
+2026-01-13 12:25:53 - INFO -   Calculating charge distribution...
+2026-01-13 12:25:53 - INFO -   Analyzing disulfide bonds...
+2026-01-13 12:25:53 - INFO -   Calculating charge dispersion...
+2026-01-13 12:25:53 - INFO -   Calculating extended SASA metrics...
+2026-01-13 12:25:53 - INFO -   Running DSSP analysis...
+2026-01-13 12:25:54 - ERROR - DSSP analysis failed: DSSP failed to produce an output
+2026-01-13 12:25:54 - INFO -   Running extended PROPKA analysis...
+2026-01-13 12:25:54 - ERROR - PROPKA failed: Traceback (most recent call last):
+  File "/opt/conda/envs/abxtract/bin/propka3", line 7, in <module>
+    sys.exit(main())
+  File "/opt/conda/envs/abxtract/lib/python3.10/site-packages/propka/run.py", line 44, in main
+    my_molecule = read_molecule_file(pdbfile, my_molecule)
+  File "/opt/conda/envs/abxtract/lib/python3.10/site-packages/propka/input.py", line 108, in read_molecule_file
+    conformations, conformation_names = read_pdb(
+  File "/opt/conda/envs/abxtract/lib/python3.10/site-packages/propka/input.py", line 255, in read_pdb
+    for (name, atom) in lines:
+  File "/opt/conda/envs/abxtract/lib/python3.10/site-packages/propka/input.py", line 180, in get_atom_lines_from_pdb
+    with open_file_for_reading(pdb_file) as handle:
+  File "/opt/conda/envs/abxtract/lib/python3.10/site-packages/propka/input.py", line 48, in open_file_for_reading
+    return contextlib.closing(open(input_file, 'rt'))
+FileNotFoundError: [Errno 2] No such file or directory: 'data/test/B10.pdb'
+
+2026-01-13 12:26:27 - INFO -   Running Arpeggio analysis...
+2026-01-13 12:26:28 - INFO - ------------------------------------------------------------
+2026-01-13 12:26:28 - INFO - Aggregating results...
+2026-01-13 12:26:31 - INFO - Saving output files...
+2026-01-13 12:26:31 - INFO - Saved descriptors_full.csv (1 rows, 34468 columns)
+2026-01-13 12:26:31 - INFO - Saved residues_heavy.csv (117 rows)
+2026-01-13 12:26:31 - INFO - Saved residues_light.csv (108 rows)
+2026-01-13 12:26:31 - INFO - Saved descriptors_raw.csv (1 rows)
+2026-01-13 12:26:31 - INFO - Run log saved to output/run_log_20260113_122631.json
+2026-01-13 12:26:31 - INFO - ============================================================
+2026-01-13 12:26:31 - INFO - PROCESSING COMPLETE
+2026-01-13 12:26:31 - INFO - ============================================================
+2026-01-13 12:26:31 - INFO - Total time: 102.3 seconds (1.7 minutes)
+2026-01-13 12:26:31 - INFO - Successful: 1/2
+2026-01-13 12:26:31 - WARNING - Failed IDs: ['VH6_21_VH']
+2026-01-13 12:26:31 - INFO - Output directory: output
+2026-01-13 12:26:31 - INFO - Output files:
+2026-01-13 12:26:31 - INFO -   - descriptors_full: output/descriptors_full.csv
+2026-01-13 12:26:31 - INFO -   - residues_heavy: output/residues_heavy.csv
+2026-01-13 12:26:31 - INFO -   - residues_light: output/residues_light.csv
+2026-01-13 12:26:31 - INFO -   - descriptors_raw: output/descriptors_raw.csv

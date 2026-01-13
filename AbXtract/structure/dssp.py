@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 from Bio.PDB import PDBParser
 from Bio.PDB.DSSP import DSSP
-from Bio.PDB.Polypeptide import three_to_one
+from Bio.PDB.Polypeptide import protein_letters_3to1 as  three_to_one
 
 logger = logging.getLogger(__name__)
 

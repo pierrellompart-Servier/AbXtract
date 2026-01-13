@@ -11,6 +11,7 @@ from .core import (
     Config,
     load_config
 )
+from .core.main import AntibodyDescriptorCalculator
 
 from .__version__ import __version__
 
@@ -21,8 +22,3 @@ __all__ = [
     'load_config',
     '__version__'
 ]
-
-# Package metadata
-__author__ = 'Your Name'
-__email__ = 'your.email@example.com'
-__license__ = 'MIT'

@@ -1,0 +1,54 @@
+{
+  "run_parameters": {
+    "input_file": "antibodies.csv",
+    "output_dir": "output",
+    "mode": "wd",
+    "numbering_scheme": "imgt",
+    "cdr_definition": "imgt",
+    "pH": 6.5,
+    "temperature": 25.0,
+    "hydrophobicity_scale": "Eisenberg",
+    "n_jobs": 6,
+    "n_cpus_available": 8,
+    "n_antibodies": 2,
+    "timestamp": "2026-01-13T12:24:49.624333",
+    "calculate_liabilities": true,
+    "calculate_bashour": true,
+    "calculate_peptide": true,
+    "calculate_protpy": true,
+    "calculate_sasa": true,
+    "calculate_charge": true,
+    "calculate_dssp": true,
+    "calculate_propka": true,
+    "calculate_arpeggio": true,
+    "calculate_cdr_properties": true,
+    "calculate_proper": true
+  },
+  "output_files": {
+    "descriptors_full": "output/descriptors_full.csv",
+    "residues_heavy": "output/residues_heavy.csv",
+    "residues_light": "output/residues_light.csv",
+    "descriptors_raw": "output/descriptors_raw.csv"
+  },
+  "execution_summary": {
+    "total_time_seconds": 102.26,
+    "n_successful": 1,
+    "n_failed": 1,
+    "failed_ids": [
+      "VH6_21_VH"
+    ]
+  },
+  "mode_settings": {
+    "calculate_liabilities": true,
+    "calculate_bashour": true,
+    "calculate_peptide": true,
+    "calculate_protpy": true,
+    "calculate_sasa": true,
+    "calculate_charge": true,
+    "calculate_dssp": true,
+    "calculate_propka": true,
+    "calculate_arpeggio": true,
+    "calculate_cdr_properties": true,
+    "calculate_proper": true
+  }
+}

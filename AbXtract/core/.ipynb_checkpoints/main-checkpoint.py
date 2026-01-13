@@ -238,7 +238,6 @@ class AntibodyDescriptorCalculator:
         self.dssp_analyzer = DSSPAnalyzer(
             dssp_path=self.config.dssp_path
         )
-        print("--- %s seconds --- INITIALIZATION" % (time.time() - start_time))
 
         
     def _check_dependencies(self):
@@ -334,7 +333,6 @@ class AntibodyDescriptorCalculator:
 
             numbering_results = self.numbering.number_sequences(sequences_dict)
             results.update(numbering_results)
-        print("--- %s seconds --- self.Calculate numbering" % (time.time() - start_time))
 
         # if heavy_sequence or light_sequence:
         #     numbering_results = self.numbering.number_sequences(
@@ -356,7 +354,6 @@ class AntibodyDescriptorCalculator:
                 if self.config.verbose:
                     raise
                     
-        print("--- %s seconds --- self.config.calculate_liabilities" % (time.time() - start_time))
 
         start_time = time.time()
 
@@ -377,7 +374,6 @@ class AntibodyDescriptorCalculator:
                 if self.config.verbose:
                     raise
                     
-        print("--- %s seconds --- self.config.calculate_bashour" % (time.time() - start_time))
 
         start_time = time.time()
 
@@ -394,7 +390,6 @@ class AntibodyDescriptorCalculator:
                 if self.config.verbose:
                     raise
     
-        print("--- %s seconds --- self.config.calculate_peptide" % (time.time() - start_time))
 
         start_time = time.time()
 
@@ -409,7 +404,6 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in ProtPy analysis: {e}")
                 if self.config.verbose:
                     raise
-        print("--- %s seconds --- self.config.calculate_protpy" % (time.time() - start_time))
 
                 
         # Store results
@@ -424,9 +418,6 @@ class AntibodyDescriptorCalculator:
             except:
                 pass
         
-        for col in df.columns.tolist():
-            print(col)
-            
         if "Charges (all pH values)" in df.columns.tolist():
             df = df.rename(columns = {"Charges (all pH values)":"Heavy_Charges (all pH values)"})
             # list of charge cols
@@ -490,7 +481,6 @@ class AntibodyDescriptorCalculator:
 
     def _flatten_disulfide_results(self, disulfide_results: Dict) -> Dict:
         """Flatten disulfide bond results."""
-        print('disulfide_results', disulfide_results)
         return {
             'Free_Cysteines': disulfide_results.get('free_cys', 0),
             'Disulfide_Bonds': disulfide_results.get('cys_bridges', 0),
@@ -500,7 +490,6 @@ class AntibodyDescriptorCalculator:
 
     def _flatten_charge_dispersion_results(self, dispersion_results: Dict) -> Dict:
         """Flatten charge dispersion results."""
-        print('dispersion_results', dispersion_results)
         return {
             'Positive_Charge_Heterogeneity': dispersion_results.get('positive_charge_heterogeneity', 0),
             'Negative_Charge_Heterogeneity': dispersion_results.get('negative_charge_heterogeneity', 0),
@@ -641,7 +630,6 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in SASA/SAP analysis: {e}")
                 if self.config.verbose:
                     raise
-        print("--- %s seconds --- Calculate SASA and SAP" % (time.time() - start_time))
 
 
         start_time = time.time()
@@ -656,7 +644,6 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in charge analysis: {e}")
                 if self.config.verbose:
                     raise
-        print("--- %s seconds --- Calculate charge properties" % (time.time() - start_time))
         start_time = time.time()
 
         # Calculate disulfide bonds
@@ -669,7 +656,6 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in disulfide analysis: {e}")
                 if self.config.verbose:
                     raise
-        print("--- %s seconds --- Calculate disulfide bonds" % (time.time() - start_time))
         start_time = time.time()
 
         # Calculate charge dispersion
@@ -682,7 +668,6 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in charge dispersion analysis: {e}")
                 if self.config.verbose:
                     raise
-        print("--- %s seconds --- Calculate charge dispersion" % (time.time() - start_time))
         start_time = time.time()
 
         # Extended SASA analysis
@@ -695,7 +680,6 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in extended SASA analysis: {e}")
                 if self.config.verbose:
                     raise
-        print("--- %s seconds --- Extended SASA analysis" % (time.time() - start_time))
 
 
         start_time = time.time()
@@ -710,7 +694,6 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in DSSP analysis: {e}")
                 if self.config.verbose:
                     raise
-        print("--- %s seconds --- Run DSSP" % (time.time() - start_time))
         start_time = time.time()
 
         # Run PROPKA
@@ -772,7 +755,6 @@ class AntibodyDescriptorCalculator:
                 # Add stability metrics
                 stability = self.extended_propka_analyzer.calculate_stability_metrics(pka_file)
                 results.update({f'stability_{k}': v for k, v in stability.items()})
-        print("--- %s seconds --- Run Extended PROPKA" % (time.time() - start_time))
         start_time = time.time()
 
         # Run computeProper
@@ -791,7 +773,6 @@ class AntibodyDescriptorCalculator:
             df_AA = pd.DataFrame()
             df_Ab = pd.DataFrame()
 
-        print("--- %s seconds --- Run computeProper" % (time.time() - start_time))
         start_time = time.time()
 
         # Run Arpeggio
@@ -804,7 +785,6 @@ class AntibodyDescriptorCalculator:
                 logger.error(f"  Error in Arpeggio analysis: {e}")
                 if self.config.verbose:
                     raise
-        print("--- %s seconds --- Run Arpeggio" % (time.time() - start_time))
         start_time = time.time()
 
         # Calculate developability index if both SAP and charge available
@@ -813,7 +793,6 @@ class AntibodyDescriptorCalculator:
                 results['SAP_score'],
                 results['Folded_charge_pH7']
             )
-        print("--- %s seconds --- Calculate developability index" % (time.time() - start_time))
 
         # Store results
         self.results['structure'] = results

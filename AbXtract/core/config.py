@@ -98,10 +98,10 @@ class Config:
     
     
     # External tool paths
-    dssp_path: str = 'dssp'
+    dssp_path: str = '/usr/bin/dssp'
     propka_path: str = '/opt/conda/envs/abxtract/bin/propka3'
     arpeggio_path: str = '/opt/conda/envs/abxtract/bin/pdbe-arpeggio'
-    reduce_path: str = 'reduce'
+    reduce_path: str = '/opt/conda/envs/abxtract/bin/reduce'
     muscle_path: str = '/opt/conda/envs/abxtract/bin/muscle'
     
     # Sequence analysis parameters

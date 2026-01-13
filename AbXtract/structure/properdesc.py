@@ -794,7 +794,6 @@ class StructFeaturizer:
 
     def net_charge_cdr(self, numbering_scheme: str = 'IMGT', chain_ids: str = None, exposed: bool = False) -> dict:
         """Returns the list of atomic charges in CDRs (optionally solvent-exposed), per chain."""
-        print("> Compute atom charges and SASA")
 
         from tqdm import tqdm
         
@@ -918,27 +917,22 @@ class StructFeaturizer:
         """
 
         if self._atom_sasa is None:
-            print("> Apply SASA calculation")
             sasa_results = apply_sasa(self.pdb_file, inc_hydrogen=True)
 
-            print("> Compute per-atom SASA values")
             from tqdm import tqdm
             atom_sasas = [
                 sasa_results.atomArea(i) for i in tqdm(range(sasa_results.nAtoms()), desc="atom_area")
             ]
 
-            print("> Get chain IDs from structure")
             atom_chain_ids = [a.full_id[2] for a in self.struct.get_atoms()]
             if len(atom_chain_ids) != len(atom_sasas):
                 raise ValueError(f"Mismatch: {len(atom_chain_ids)} chain IDs vs {len(atom_sasas)} SASA values")
 
-            print("> Group SASA values by chain")
             atom_sasa_dict = {}
             for chain_id, s in tqdm(zip(atom_chain_ids, atom_sasas), desc="group_sasa", total=len(atom_sasas)):
                 atom_sasa_dict.setdefault(chain_id, []).append(s)
 
             self._atom_sasa = atom_sasa_dict
-            print("> Finished SASA per chain")
 
         exposed_vh_charge = []
         for h_c, h_s in zip(self._atom_charges['H'], self._atom_sasa['H']):
