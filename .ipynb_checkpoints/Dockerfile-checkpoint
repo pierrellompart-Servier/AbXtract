@@ -35,32 +35,26 @@ RUN conda env create -f /tmp/environment.yml -n abxtract \
 # Activate conda environment by default
 SHELL ["conda", "run", "-n", "abxtract", "/bin/bash", "-c"]
 
-# Install additional pip packages
-RUN pip install --no-cache-dir \
-    abnumber \
-    propka \
-    peptides \
-    protpy \
-    prody \
-    tqdm \
-    numba \
-    matplotlib \
-    scikit-learn \
-    seaborn \
-    pdbe-arpeggio \
-    biopython \
-    freesasa \
-    ipykernel
 
 # Install reduce from bioconda (if not already in env)
 # RUN conda install -y -n abxtract -c bioconda reduce || true
-RUN conda install -c salilab dssp -y || true
-RUN conda install bioconda::anarci || true
-RUN conda install conda-forge::openmm || true
-RUN conda install conda-forge::pdbfixer || true
-RUN conda install bioconda::muscle || true
-RUN conda install bioconda::reduce || true
+# RUN conda activate abxtract
 
+RUN pip install abnumber propka
+RUN conda install bioconda::hmmer || true
+RUN conda install -c salilab dssp -y # i had difficulties making dssp work  || true
+RUN pip install peptides protpy prody tqdm numba matplotlib
+RUN pip install scikit-learn
+RUN pip install seaborn 
+RUN conda install bioconda::anarci  || true
+RUN pip install freesasa
+RUN conda install conda-forge::openmm  || true
+RUN conda install conda-forge::pdbfixer  || true
+RUN pip install pdbe-arpeggio
+RUN conda install bioconda::muscle  || true
+RUN conda install bioconda::reduce  || true
+RUN pip install ipykernel
+RUN python -m ipykernel install --user --name=abxtract --display-name "abxtract"
 
 
 
