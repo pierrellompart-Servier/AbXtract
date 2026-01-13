@@ -1,0 +1,75 @@
+# =============================================================================
+# AbXtract Docker Compose Configuration
+# =============================================================================
+#
+# Usage:
+#   Build:     docker-compose build
+#   Run:       docker-compose run --rm abxtract -i /data/test/input.csv -o /data/output/
+#   Shell:     docker-compose run --rm abxtract bash
+#
+# =============================================================================
+
+version: '3.8'
+
+services:
+  abxtract:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: abxtract:latest
+    container_name: abxtract-cli
+    
+    # Mount volumes for input/output data
+    volumes:
+      # Input data directory - put your CSV and PDB files here
+      - ./data/test:/data/test:ro
+      # Output directory - results will be written here
+      - ./data/output:/data/output:rw
+      # Optional: mount your own AbXtract code for development
+      # - ./AbXtract:/app/AbXtract:ro
+    
+    # Working directory inside container
+    working_dir: /data
+    
+    # Default command (can be overridden)
+    command: ["python", "/app/run_abxtract.py", "--help"]
+    
+    # Resource limits (adjust as needed)
+    deploy:
+      resources:
+        limits:
+          cpus: '8'
+          memory: 16G
+        reservations:
+          cpus: '2'
+          memory: 4G
+    
+    # Environment variables
+    environment:
+      - PYTHONUNBUFFERED=1
+      - NUMBA_CACHE_DIR=/tmp/numba_cache
+    
+    # Restart policy
+    restart: "no"
+
+  # Optional: Jupyter notebook service for interactive analysis
+  notebook:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: abxtract:latest
+    container_name: abxtract-notebook
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./data:/data:rw
+      - ./notebooks:/notebooks:rw
+    working_dir: /notebooks
+    command: >
+      bash -c "source /opt/conda/etc/profile.d/conda.sh && 
+               conda activate abxtract && 
+               jupyter notebook --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token=''"
+    environment:
+      - PYTHONUNBUFFERED=1
+    profiles:
+      - notebook  # Only start with: docker-compose --profile notebook up

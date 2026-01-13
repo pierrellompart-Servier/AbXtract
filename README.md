@@ -26,6 +26,33 @@ pip install ipykernel
 python -m ipykernel install --user --name=abxtract --display-name "abxtract"
 ```
 
+```bash
+# Docker build
+docker build -t abxtract:latest .
+mkdir -p data/test data/output
+
+```
+
+```bash
+# Docker run
+docker run --rm \
+    -v $(pwd)/data/test:/data/test:ro \
+    -v $(pwd)/data/output:/data/output:rw \
+    abxtract:latest \
+    python /app/run_abxtract.py \
+    -i /data/test/input.csv \
+    -o /data/output/ \
+    --base-dir /data/test \
+    -m r
+
+# Or use docker-compose
+docker-compose run --rm abxtract \
+    python /app/run_abxtract.py \
+    -i /data/test/input.csv \
+    -o /data/output/ \
+    --base-dir /data/test
+
+```
 
 ## 💡 Quick Start
 
@@ -33,16 +60,16 @@ python -m ipykernel install --user --name=abxtract --display-name "abxtract"
 conda activate abxtract
 
 # Basic run (mode r by default)
-python run_abxtract.py -i input.csv -o results/
+python run_abxtract.py -i ./data/test/input.csv -o results/
 
 # Wide/deep mode with custom pH
-python run_abxtract.py -i input.csv -o output/ -m wd -p 6.5
+python run_abxtract.py -i ./data/test/input.csv -o output/ -m wd -p 6.5
 
 # Custom numbering scheme
-python run_abxtract.py -i input.csv -o output/ --numbering-scheme kabat
+python run_abxtract.py -i ./data/test/input.csv -o output/ --numbering-scheme kabat
 
 # Force 8 parallel jobs
-python run_abxtract.py -i input.csv -o output/ --n-jobs 8
+python run_abxtract.py -i ./data/test/input.csv -o output/ --n-jobs 8
 ```
 
 ### All CLI Options
