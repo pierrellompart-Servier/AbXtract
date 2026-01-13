@@ -1,0 +1,51 @@
+{
+  "run_parameters": {
+    "input_file": "/workspace/data/test/input.csv",
+    "output_dir": "/data/output",
+    "mode": "r",
+    "numbering_scheme": "imgt",
+    "cdr_definition": "imgt",
+    "pH": 7.4,
+    "temperature": 25.0,
+    "hydrophobicity_scale": "Eisenberg",
+    "n_jobs": 6,
+    "n_cpus_available": 8,
+    "n_antibodies": 1,
+    "timestamp": "2026-01-13T15:42:10.433449",
+    "calculate_liabilities": true,
+    "calculate_bashour": true,
+    "calculate_peptide": false,
+    "calculate_protpy": false,
+    "calculate_sasa": true,
+    "calculate_charge": true,
+    "calculate_dssp": true,
+    "calculate_propka": true,
+    "calculate_arpeggio": true,
+    "calculate_cdr_properties": true,
+    "calculate_proper": true
+  },
+  "output_files": {
+    "descriptors_full": "/data/output/descriptors_full.csv",
+    "residues_heavy": "/data/output/residues_heavy.csv",
+    "descriptors_raw": "/data/output/descriptors_raw.csv"
+  },
+  "execution_summary": {
+    "total_time_seconds": 12.9,
+    "n_successful": 1,
+    "n_failed": 0,
+    "failed_ids": []
+  },
+  "mode_settings": {
+    "calculate_liabilities": true,
+    "calculate_bashour": true,
+    "calculate_peptide": false,
+    "calculate_protpy": false,
+    "calculate_sasa": true,
+    "calculate_charge": true,
+    "calculate_dssp": true,
+    "calculate_propka": true,
+    "calculate_arpeggio": true,
+    "calculate_cdr_properties": true,
+    "calculate_proper": true
+  }
+}

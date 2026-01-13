@@ -30,27 +30,42 @@ python -m ipykernel install --user --name=abxtract --display-name "abxtract"
 # Docker build
 docker build -t abxtract:latest .
 mkdir -p data/test data/output
+```
 
+```bash
+# Docker clean-up
+# Stop and remove any running containers using the image
+docker stop $(docker ps -q --filter ancestor=abxtract:latest) 2>/dev/null || true
+docker rm $(docker ps -aq --filter ancestor=abxtract:latest) 2>/dev/null || true
+
+# Remove the image
+docker rmi abxtract:latest
+
+# Optional: Remove all dangling/unused images to free space
+docker image prune -f
+
+# Optional: Full cleanup (removes all unused images, containers, volumes)
+docker system prune -a
 ```
 
 ```bash
 # Docker run
 docker run --rm \
-    -v $(pwd)/data/test:/data/test:ro \
+    -v $(pwd):/workspace:ro \
     -v $(pwd)/data/output:/data/output:rw \
     abxtract:latest \
     python /app/run_abxtract.py \
-    -i /data/test/input.csv \
+    -i /workspace/data/test/input.csv \
     -o /data/output/ \
-    --base-dir /data/test \
+    --base-dir /workspace \
     -m r
 
 # Or use docker-compose
 docker-compose run --rm abxtract \
     python /app/run_abxtract.py \
-    -i /data/test/input.csv \
+    -i /workspace/data/test/input.csv \
     -o /data/output/ \
-    --base-dir /data/test
+    --base-dir /workspace
 
 ```
 

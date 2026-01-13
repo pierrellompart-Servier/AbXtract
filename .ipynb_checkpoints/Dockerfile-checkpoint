@@ -41,7 +41,7 @@ SHELL ["conda", "run", "-n", "abxtract", "/bin/bash", "-c"]
 # RUN conda activate abxtract
 
 RUN pip install abnumber propka
-RUN conda install bioconda::hmmer || true
+RUN conda install bioconda::hmmer || y
 RUN conda install -c salilab dssp -y # i had difficulties making dssp work  || true
 RUN pip install peptides protpy prody tqdm numba matplotlib
 RUN pip install scikit-learn
@@ -73,12 +73,12 @@ RUN mkdir -p /data/test /data/output /app/temp
 RUN chmod +x /app/run_abxtract.py
 
 # Create entrypoint script
-RUN echo '#!/bin/bash\n\
-source /opt/conda/etc/profile.d/conda.sh\n\
-conda activate abxtract\n\
-exec "$@"' > /entrypoint.sh \
-    && chmod +x /entrypoint.sh
-
+RUN echo '#!/bin/bash' > /entrypoint.sh && \
+    echo 'source /opt/conda/etc/profile.d/conda.sh' >> /entrypoint.sh && \
+    echo 'conda activate abxtract' >> /entrypoint.sh && \
+    echo 'exec "$@"' >> /entrypoint.sh && \
+    chmod +x /entrypoint.sh
+    
 # Set the entrypoint
 ENTRYPOINT ["/entrypoint.sh"]
 
